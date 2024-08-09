@@ -1,0 +1,12 @@
+H:\GTA5 scripts\Projects\Interactions\obj\Debug\Interactions.csproj.AssemblyReference.cache
+H:\GTA5 scripts\Projects\Interactions\obj\Debug\Interactions.csproj.CoreCompileInputs.cache
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\Interactions.dll
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\Interactions.pdb
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\iFruitAddon2.dll
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\LemonUI.SHVDN3.dll
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\ScriptHookVDotNet3.dll
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\LemonUI.SHVDN3.xml
+H:\GTA5 scripts\Projects\Interactions\bin\Debug\ScriptHookVDotNet3.xml
+H:\GTA5 scripts\Projects\Interactions\obj\Debug\Interact.BC862F05.Up2Date
+H:\GTA5 scripts\Projects\Interactions\obj\Debug\Interactions.dll
+H:\GTA5 scripts\Projects\Interactions\obj\Debug\Interactions.pdb
