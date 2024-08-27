@@ -252,7 +252,7 @@ namespace AdvancedInteractionSystem
             // CREATE GAS STATION BLIPS: 
             for (int index = 0; index < gasStations.Length; ++index)
             {
-                AIS.CreateBlip(gasStations[index], (BlipSprite)361, BlipColor.White, "Gas Station", fuelBlips);
+                AIS.CreateBlip(gasStations[index], (BlipSprite)361, 0.6f, BlipColor.White, "Gas Station", fuelBlips);
             }
         }
         public static void GetClosestGasStation()

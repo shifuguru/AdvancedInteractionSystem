@@ -7,8 +7,20 @@
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\n.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|f:\\gta5 scripts\\projects\\advancedinteractionsystem\\n.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:n.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\ais.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:ais.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|f:\\gta5 scripts\\projects\\advancedinteractionsystem\\fuel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:fuel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\settingsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:settingsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\interactionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -35,16 +47,8 @@
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:bonehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\ais.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:ais.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\daytimeheadlights.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:daytimeheadlights.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|f:\\gta5 scripts\\projects\\advancedinteractionsystem\\settingsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:settingsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\readme.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
@@ -61,7 +65,7 @@
       "VerticalTabListWidth": 256,
       "DocumentGroups": [
         {
-          "DockedWidth": 208,
+          "DockedWidth": 94,
           "SelectedChildIndex": 6,
           "Children": [
             {
@@ -83,19 +87,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "InteractionHandler.cs",
-              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\InteractionHandler.cs",
-              "RelativeDocumentMoniker": "InteractionHandler.cs",
-              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\InteractionHandler.cs",
-              "RelativeToolTip": "InteractionHandler.cs",
-              "ViewState": "AQIAAFgAAAAAAAAAAAAnwG0AAAA9AAAA",
+              "Title": "Fuel.cs",
+              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Fuel.cs",
+              "RelativeDocumentMoniker": "Fuel.cs",
+              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Fuel.cs",
+              "RelativeToolTip": "Fuel.cs",
+              "ViewState": "AQIAAOcAAAAAAAAAAAAIwP4AAABKAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-21T09:32:03.288Z",
+              "WhenOpened": "2024-08-27T11:11:22.017Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "InteractionManager.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\InteractionManager.cs",
               "RelativeDocumentMoniker": "InteractionManager.cs",
@@ -103,8 +107,7 @@
               "RelativeToolTip": "InteractionManager.cs",
               "ViewState": "AQIAACAAAAAAAAAAAAAQwBAAAABQAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-21T02:38:09.213Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-05-21T02:38:09.213Z"
             },
             {
               "$type": "Document",
@@ -114,27 +117,39 @@
               "RelativeDocumentMoniker": "N.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\N.cs",
               "RelativeToolTip": "N.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABIAAABOAAAA",
+              "ViewState": "AQIAABcAAAAAAAAAAAAhwBgAAAAxAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-07-18T04:50:38.16Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 6,
+              "Title": "InteractionHandler.cs",
+              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\InteractionHandler.cs",
+              "RelativeDocumentMoniker": "InteractionHandler.cs",
+              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\InteractionHandler.cs",
+              "RelativeToolTip": "InteractionHandler.cs",
+              "ViewState": "AQIAAFgAAAAAAAAAAAAnwG0AAAA9AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-21T09:32:03.288Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "AIS.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\AIS.cs",
               "RelativeDocumentMoniker": "AIS.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\AIS.cs",
               "RelativeToolTip": "AIS.cs",
-              "ViewState": "AQIAAA8AAAAAAAAAAIAwwFcAAAAlAAAA",
+              "ViewState": "AQIAAAQAAAAAAAAAAAAnwFkAAAAeAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2023-09-27T01:59:01.867Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 10,
               "Title": "BoneHelper.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\BoneHelper.cs",
               "RelativeDocumentMoniker": "BoneHelper.cs",
@@ -142,12 +157,11 @@
               "RelativeToolTip": "BoneHelper.cs",
               "ViewState": "AQIAABoAAAAAAAAAAAAnwC4AAAAtAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-27T04:16:22.235Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-07-27T04:16:22.235Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "Cleaning.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Cleaning.cs",
               "RelativeDocumentMoniker": "Cleaning.cs",
@@ -155,12 +169,11 @@
               "RelativeToolTip": "Cleaning.cs",
               "ViewState": "AQIAADQAAAAAAAAAAAAgwDsAAAAqAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-20T11:48:09.006Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-05-20T11:48:09.006Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "IgnitionHandler.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\IgnitionHandler.cs",
               "RelativeDocumentMoniker": "IgnitionHandler.cs",
@@ -168,12 +181,11 @@
               "RelativeToolTip": "IgnitionHandler.cs",
               "ViewState": "AQIAAFwAAAAAAAAAAAAvwB4AAAAbAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-27T04:16:23.346Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-07-27T04:16:23.346Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "Rectangle.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Rectangle.cs",
               "RelativeDocumentMoniker": "Rectangle.cs",
@@ -181,13 +193,12 @@
               "RelativeToolTip": "Rectangle.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAwAAAAQAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-27T04:16:24.853Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-07-27T04:16:24.853Z"
             }
           ]
         },
         {
-          "DockedWidth": 240,
+          "DockedWidth": 354,
           "SelectedChildIndex": 0,
           "Children": [
             {
@@ -198,27 +209,27 @@
               "RelativeDocumentMoniker": "Persistence.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Persistence.cs",
               "RelativeToolTip": "Persistence.cs",
-              "ViewState": "AQIAAJEBAAAAAAAAAAAIwKoBAAAAAAAA",
+              "ViewState": "AQIAAK0BAAAAAAAAAAAnwLsBAAAgAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-07-29T05:37:45.617Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 4,
               "Title": "SettingsManager.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\SettingsManager.cs",
               "RelativeDocumentMoniker": "SettingsManager.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\SettingsManager.cs",
               "RelativeToolTip": "SettingsManager.cs",
-              "ViewState": "AQIAAC0AAAAAAAAAAAAAAD4AAAAcAAAA",
+              "ViewState": "AQIAABUAAAAAAAAAAAAnwCwAAAAbAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-07-27T02:50:13.889Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "Repairs.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Repairs.cs",
               "RelativeDocumentMoniker": "Repairs.cs",
@@ -226,12 +237,11 @@
               "RelativeToolTip": "Repairs.cs",
               "ViewState": "AQIAAKUAAAAAAAAAAAAewKUAAAAHAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-20T08:05:56.933Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-05-20T08:05:56.933Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 11,
               "Title": "DaytimeHeadlights.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\DaytimeHeadlights.cs",
               "RelativeDocumentMoniker": "DaytimeHeadlights.cs",
@@ -239,12 +249,11 @@
               "RelativeToolTip": "DaytimeHeadlights.cs",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAUAAAAjAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-07-31T22:05:07.059Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-07-31T22:05:07.059Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "README.md",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\README.md",
               "RelativeDocumentMoniker": "README.md",
@@ -252,8 +261,7 @@
               "RelativeToolTip": "README.md",
               "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAADAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2024-08-25T02:28:18.578Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-08-25T02:28:18.578Z"
             }
           ]
         }

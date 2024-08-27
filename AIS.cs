@@ -81,13 +81,13 @@ namespace AdvancedInteractionSystem
             return weatherCondition;
         }
 
-        public static void CreateBlip(Vector3 position, BlipSprite sprite, BlipColor color, string blipName, List<Blip> blips)
+        public static void CreateBlip(Vector3 position, BlipSprite sprite, float scale, BlipColor color, string blipName, List<Blip> blips)
         {
             if (position == null || blips == null) return;
             Blip blip = World.CreateBlip(position);
             if (blip == null) return;
             blip.Sprite = sprite;
-            blip.Scale = 0.6f;
+            blip.Scale = scale;
             blip.Color = color;
             blip.Name = blipName;
             blip.IsShortRange = SettingsManager.shortRangeBlips;

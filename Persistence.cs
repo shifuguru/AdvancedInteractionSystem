@@ -94,6 +94,7 @@ namespace AdvancedInteractionSystem
                 playerVehicleRegistry[player] = new List<VehicleData>();
 
                 string directoryPath = Path.Combine(xmlPath, player.ToString());
+
                 if (Directory.Exists(directoryPath))
                 {
                     string[] files = Directory.GetFiles(directoryPath, "*.xml");
@@ -137,14 +138,15 @@ namespace AdvancedInteractionSystem
             Ped GPC = Game.Player.Character;
             if (GPC == null || !GPC.IsOnFoot || Game.IsControlPressed(Control.Aim))
                 return;
+
             owner = GetPlayerCharacter(GPC);
 
-            Vehicle lastVehicle = GPC.LastVehicle;
-            if (lastVehicle != null && lastVehicle.Exists() && !IsVehicleOwned(owner, lastVehicle))
+            Vehicle currentVehicle = GPC.CurrentVehicle;
+            if (currentVehicle != null)
             {
-                SaveVehicle(owner, lastVehicle);
+                SaveVehicle(currentVehicle);
             }
-            
+
             Vehicle closestVehicle = World.GetClosestVehicle(GPC.Position, persistenceDistance);
             if (closestVehicle != null && closestVehicle.Exists())
             {
@@ -157,14 +159,19 @@ namespace AdvancedInteractionSystem
             if (vehicle == null)
                 return;
 
-            VehicleData data = CreateVehicleData(vehicle, owner);
+            VehicleData data = GetVehicleData(vehicle, owner);
 
-            bool isOwned = playerVehicleRegistry[owner].Any(v => v.Equals(data));
+
+
+            bool isOwned = playerVehicleRegistry[owner].Any(v => v.Equals(data.LicensePlate));
+
+            N.ShowSubtitle($"{isOwned}", 500);
+            
             VehicleLockStatus lockStatus = vehicle.LockStatus;
 
             if (isOwned)
             {
-                N.ShowHelpText($"Press ~INPUT_CONTEXT~ to {(lockStatus == VehicleLockStatus.CannotEnter ? "unlock" : "lock")} the {data.FullName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
+                N.ShowHelpText($"Press ~INPUT_CONTEXT~ to {(lockStatus == VehicleLockStatus.CannotEnter ? "unlock" : "lock")} the {data.LocalizedName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
 
                 if (Game.IsControlJustReleased(Control.ContextSecondary))
                 {
@@ -174,13 +181,13 @@ namespace AdvancedInteractionSystem
                 {
                     if (lockStatus == VehicleLockStatus.CannotEnter)
                     {
-                        N.ShowHelpText($"Press ~INPUT_CONTEXT~ to unlock the {data.FullName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
+                        N.ShowHelpText($"Press ~INPUT_CONTEXT~ to unlock the {data.LocalizedName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
                         UnlockVehicle(vehicle);
                     }
                     else
                     {
                         LockVehicle(vehicle);
-                        // SaveVehicle(closestVehicle, GetPlayerCharacter(Game.Player.Character));
+                        SaveVehicle(vehicle);
                     }
                 }
             }
@@ -190,25 +197,32 @@ namespace AdvancedInteractionSystem
 
         private PlayerCharacter GetPlayerCharacter(Ped player)
         {
-            Player gamePlayer = Function.Call<Player>(Hash.GET_PLAYER_NAME, player);
-            string playerName = Function.Call<string>(Hash.GET_PLAYER_PED, gamePlayer);
+            Model model = player.Model;
+            PlayerCharacter character;
 
-            if (persistence_debugEnabled && !string.IsNullOrEmpty(playerName))
+            if (model == PedHash.Michael)
             {
-                N.ShowSubtitle($"Owner: {playerName}", 500);
+                character = PlayerCharacter.Michael;
+            }
+            else if (model == PedHash.Franklin)
+            {
+                character = PlayerCharacter.Franklin; 
+            }
+            else if (model == PedHash.Trevor)
+            {
+                character = PlayerCharacter.Trevor;
+            }
+            else
+            {
+                character = PlayerCharacter.Other;
             }
 
-            switch (playerName)
+            if (persistence_debugEnabled)
             {
-                case "MICHAEL":
-                    return PlayerCharacter.Michael;
-                case "FRANKLIN":
-                    return PlayerCharacter.Franklin;
-                case "TREVOR":
-                    return PlayerCharacter.Trevor;
-                default:
-                    return PlayerCharacter.Other;
+                // N.ShowSubtitle($"Owner: {character}", 500);
             }
+
+            return character;
         }
 
         private bool IsVehicleOwned(PlayerCharacter owner, Vehicle vehicle)
@@ -250,8 +264,7 @@ namespace AdvancedInteractionSystem
             {
                 if (vehicle == null) return;
 
-                //PlayerCharacter owner = GetPlayerCharacter(Game.Player.Character);
-                VehicleData data = CreateVehicleData(vehicle, owner);
+                VehicleData data = GetVehicleData(vehicle, owner);
 
                 playerVehicleRegistry[owner].Remove(data);
 
@@ -312,28 +325,25 @@ namespace AdvancedInteractionSystem
             }
         }
 
-        private void SaveVehicle(PlayerCharacter owner, Vehicle vehicle)
+        private void SaveVehicle(Vehicle vehicle)
         {
             try
             {
                 if (vehicle != null)
                 {
-                    VehicleData data = CreateVehicleData(vehicle, owner);
+                    VehicleData data = GetVehicleData(vehicle, owner);
 
                     if (!playerVehicleRegistry[owner].Contains(data))
                     {
-                        AIS.CreateBlip(vehicle.Position, BlipSprite.PersonalVehicleCar, BlipColor.White, data.FullName, carBlips);
+                        AIS.CreateBlip(vehicle.Position, BlipSprite.PersonalVehicleCar, 0.6f, BlipColor.White, data.FullName, carBlips);
                         playerVehicleRegistry[owner].Add(data);
                         SaveVehicleToXml(data);
 
-                        if (persistence_debugEnabled)
-                        {
-                            N.ShowSubtitle($"Vehicle {data.FullName} saved for Player {owner}!", 2500);
-                        }
+                        N.DisplayNotificationSMS(NotificationIcon.MpMorsMutual, "", "", $"Vehicle {data.FullName} saved for {owner}", false, false);
                     }
                     else if (persistence_debugEnabled)
                     {
-                        N.ShowSubtitle($"Vehicle {vehicle.LocalizedName} saved for Player {owner}!", 2500);
+                        N.ShowSubtitle($"{data.FullName} already exists for {data.Owner}!", 2500);
                     }
                 }
             }
@@ -409,7 +419,7 @@ namespace AdvancedInteractionSystem
 
         // Functions: 
         #region Functions:
-        private VehicleData CreateVehicleData(Vehicle vehicle, PlayerCharacter owner)
+        private VehicleData GetVehicleData(Vehicle vehicle, PlayerCharacter owner)
         {
             return new VehicleData
             {
@@ -436,7 +446,7 @@ namespace AdvancedInteractionSystem
             try
             {
                 string fileName = $"{data.LicensePlate}.xml";
-                string fullPath = Path.Combine(xmlPath, fileName);
+                string fullPath = Path.Combine(xmlPath, owner.ToString(), fileName);
 
                 XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
 
@@ -455,7 +465,7 @@ namespace AdvancedInteractionSystem
 
                 if (persistence_debugEnabled)
                 {
-                    N.ShowSubtitle($"{data.FullName} : {data.LicensePlate} : {data.Owner} saved to {xmlPath}", 2500);
+                    N.ShowSubtitle($"{data.FullName} : {data.LicensePlate} : {data.Owner} saved to {fullPath}", 2500);
                 }
             }
             catch (Exception ex)
