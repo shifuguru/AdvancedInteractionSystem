@@ -7,18 +7,19 @@ using Control = GTA.Control;
 using Screen = GTA.UI.Screen;
 using System.Threading;
 using LemonUI.Elements;
+using System.Collections.Generic;
 
 namespace AdvancedInteractionSystem
 {
     public class InteractionManager : Script
     {
-        public static bool modEnabled = SettingsManager.modEnabled;
-        public static bool debugEnabled = SettingsManager.debugEnabled;
         public static float interactionDistance = SettingsManager.interactionDistance;
+        public static float persistenceDistance = SettingsManager.persistenceDistance;
         
         // VEHICLES: 
-        public static Vehicle currentVehicle; // Player's Current Vehicle. 
-        public static Vehicle closestVehicle; // Closest Vehicle when player is on foot 
+        public static Vehicle currentVehicle = null; // Player's Current Vehicle. 
+        public static Vehicle lastVehicle = null; // Player's Current Vehicle. 
+        public static Vehicle closestVehicle = null; // Closest Vehicle when player is on foot 
 
         // PED: 
         public static Ped GPC = Game.Player.Character;
@@ -40,9 +41,10 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                modEnabled = SettingsManager.modEnabled;
-                debugEnabled = SettingsManager.debugEnabled;
-                if (!modEnabled) return;
+                if (Game.IsLoading || Game.IsPaused || !SettingsManager.modEnabled)
+                    return;
+                // modEnabled = SettingsManager.modEnabled;
+                bool debugEnabled = SettingsManager.debugEnabled;
                 
                 GPC = Game.Player.Character;
                 if (GPC == null) return;
@@ -55,11 +57,14 @@ namespace AdvancedInteractionSystem
                 }
                 if (GPC.IsOnFoot)
                 {
+                    currentVehicle = null;
                     closestVehicle = World.GetClosestVehicle(GPC.Position, interactionDistance);
+
                     if (closestVehicle != null)
                     {
                         InteractionHandler.HandleOnFoot(closestVehicle);
                     }
+                    
                 }
             }
             catch (Exception ex)
@@ -75,8 +80,6 @@ namespace AdvancedInteractionSystem
             {
                 soundStopEvent.Set();
                 
-                Repairs.isRepairing = false;
-                Cleaning.cleaning = false;
                 // Clear animations
                 Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
                 Game.Player.Character.Task.ClearAnimation("timetable@maid@cleaning_surface@base", "base");
@@ -84,19 +87,23 @@ namespace AdvancedInteractionSystem
 
                 if (Repairs.repairProp.Exists())
                 {
+                    Repairs.repairProp.Detach();
                     Repairs.repairProp.Delete();
+                    Repairs.repairProp = null;
                 }
 
                 if (Cleaning.cleaningProp.Exists())
                 {
+                    Cleaning.cleaningProp.Detach();
                     Cleaning.cleaningProp.Delete();
+                    Cleaning.cleaningProp = null;
                 }
+
+                Repairs.isRepairing = false;
+                Cleaning.cleaning = false;
             }
             catch (Exception ex)
             {
-                soundStopEvent.Set();
-                Repairs.isRepairing = false;
-                Cleaning.cleaning = false;
                 AIS.LogException("InteractionManager.CancelActions", ex);
             }
         }
@@ -106,8 +113,6 @@ namespace AdvancedInteractionSystem
             {
                 soundStopEvent.Set();
                 Game.Player.Character.Task.ClearAll();
-                Repairs.isRepairing = false;
-                Cleaning.cleaning = false;
 
                 if (Repairs.repairProp.Exists())
                 {
@@ -118,12 +123,11 @@ namespace AdvancedInteractionSystem
                 {
                     Cleaning.cleaningProp.Delete();
                 }
+                Repairs.isRepairing = false;
+                Cleaning.cleaning = false;
             }
             catch (Exception ex)
             {
-                soundStopEvent.Set();
-                Repairs.isRepairing = false;
-                Cleaning.cleaning = false;
                 AIS.LogException("InteractionManager.CompleteActions", ex);
             }
         }

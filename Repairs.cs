@@ -19,7 +19,6 @@ namespace AdvancedInteractionSystem
         public static Vector3 repairObjectRotation = new Vector3(112.32f, 5.76f, -15.84f);
         public static DateTime actionStartTime;
         public static bool isRepairing = false;
-        public static Vehicle currentVehicle = null;
 
         public Repairs()
         {
@@ -76,7 +75,7 @@ namespace AdvancedInteractionSystem
                     {
                         if (repairs_debugEnabled)
                         {
-                            Screen.ShowSubtitle("~r~Repair Failed: No vehicle found~s~", 300);
+                            N.ShowSubtitle("~r~Repair Failed: No vehicle found~s~", 300);
                         }
                         return;
                     }
@@ -84,7 +83,7 @@ namespace AdvancedInteractionSystem
                     {
                         if (repairs_debugEnabled)
                         {
-                            Screen.ShowSubtitle("~r~Vehicle is beyond repair~s~", 300);
+                            N.ShowSubtitle("~r~Vehicle is beyond repair~s~", 300);
                         }
                         return;
                     }
@@ -95,7 +94,10 @@ namespace AdvancedInteractionSystem
                     }
                     if (repairs_debugEnabled)
                     {
-                        Screen.ShowSubtitle("Starting Repairing Process...", 1000);
+                        if (repairs_debugEnabled)
+                        {
+                            N.ShowSubtitle("Starting Repairing Process...", 1000);
+                        }                        
                     }
                     
                     InteractionHandler.LookAtVehicle(vehicle, 2000);
@@ -166,13 +168,24 @@ namespace AdvancedInteractionSystem
         {
             try
             {
+                if (vehicle == null) return;
+
                 InteractionHandler.CloseVehicleDoors(vehicle);
                 InteractionManager.CompleteActions();
                 Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
                 
+                if (repairProp != null && repairProp.Exists())
+                {
+                    repairProp.Detach();
+                    repairProp.Delete();
+                    repairProp = null;
+                }
+
+                isRepairing = false;
+
                 if (repairs_debugEnabled)
                 {
-                    Screen.ShowSubtitle("Repair Complete", 300);
+                    N.ShowSubtitle("Repair Complete", 300);
                 }
             }
             catch (Exception ex)

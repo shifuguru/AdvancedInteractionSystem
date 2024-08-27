@@ -45,9 +45,7 @@ namespace AdvancedInteractionSystem
             try
             {
                 if (!cleaning || closestVehicle == null || !closestVehicle.Exists())
-                {
                     return;
-                }
 
                 if ((DateTime.Now - actionStartTime).TotalSeconds >= washDuration)
                 {

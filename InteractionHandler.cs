@@ -16,7 +16,7 @@ namespace AdvancedInteractionSystem
         public static bool handler_debugEnabled = SettingsManager.handler_debugEnabled;
         // CONTROLS: 
         private static Control flipControl;
-        private static Control studyControl; // No longer used, car is studied while interacting. 
+        //private static Control studyControl; // No longer used, car is studied while interacting. 
         private static Control cleanControl;
         private static Control repairControl;
         private static Control doorControl;
@@ -34,7 +34,7 @@ namespace AdvancedInteractionSystem
         public InteractionHandler()
         {
             flipControl = SettingsManager.flipControl;
-            studyControl = SettingsManager.studyControl;
+            // studyControl = SettingsManager.studyControl;
             cleanControl = SettingsManager.cleanControl;
             repairControl = SettingsManager.repairControl;
             doorControl = SettingsManager.doorControl;
@@ -47,7 +47,7 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (currentVehicle == null) return;
+                if (currentVehicle == null || !currentVehicle.Exists()) return;
                 
                 bool engineRunning = currentVehicle.IsEngineRunning;
                 float engineHealth = currentVehicle.EngineHealth;
@@ -65,16 +65,16 @@ namespace AdvancedInteractionSystem
                         {
                             if (engineTemp < 5f)
                             {
-                                N.DisplayNotification("~r~Engine Temperature: low~s~", false);
+                                N.DisplayNotification("Engine Temperature: ~b~Low~s~", false);
                             }
                             else if (engineTemp > 110f)
                             {
-                                N.DisplayNotification("~r~Engine Temperature: critically high~s~", false);
+                                N.DisplayNotification("Engine Temperature: ~r~High~s~", false);
                             }
                         }
                         if (engineHealth < 400)
                         {
-                            N.ShowHelpText("~r~Warning: Engine condition critically low. Service required.~s~");
+                            N.ShowHelpText("~r~Warning: Engine condition critical. Service immediately.~s~");
                         }
                     }
                 }                
@@ -89,15 +89,13 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (closestVehicle == null) return;
+                if (closestVehicle == null || !closestVehicle.Exists()) return;
 
                 Ped GPC = Game.Player.Character;
                 float distance = GPC.Position.DistanceTo(closestVehicle.Position);
                 bool vehicleClose = distance < interactionDistance;
                 bool facingVehicle = IsPlayerFacingVehicle(closestVehicle);
                 bool controlHeld = Game.IsControlPressed(Control.Aim);
-
-                // AIS.DisplaySubtitleThisFrame($"Handling: {closestVehicle}, distance: {distance}", 500);
 
                 if (facingVehicle && vehicleClose)
                 {
@@ -224,8 +222,8 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                vehicle?.Doors[VehicleDoorIndex.Hood]?.Open(true, false);
-                vehicle?.Doors[VehicleDoorIndex.Trunk]?.Open(true, false);
+                vehicle?.Doors[VehicleDoorIndex.Hood]?.Open(false, false);
+                vehicle?.Doors[VehicleDoorIndex.Trunk]?.Open(false, false);
             }
             catch (Exception ex)
             {
@@ -252,6 +250,24 @@ namespace AdvancedInteractionSystem
             }
 
         }
+
+        public static void LeaveEngineRunning(Vehicle vehicle)
+        {
+            if (!vehicle.IsEngineRunning)
+            {
+                N.SetVehicleEngineOn(vehicle, true, true, false);
+            }
+        }
+
+        public static void DisableAutoStart(Vehicle vehicle)
+        {
+            if (vehicle.IsEngineRunning)
+            {
+                N.SetVehicleEngineOn(vehicle, false, true, false);
+            }
+        }
+
+
 
         public static void HandleStudy(Vehicle vehicle)
         {
@@ -350,7 +366,7 @@ namespace AdvancedInteractionSystem
             try
             {
                 if (vehicle == null) return string.Empty;
-                if (AIS.IsVehicleLocked(vehicle))
+                if (N.IsVehicleLocked(vehicle))
                 {
                     locked = true;
                     return "~INPUT_ENTER~ Unlock Vehicle";
@@ -396,59 +412,48 @@ namespace AdvancedInteractionSystem
             try
             {
                 var closestBone = BoneHelper.GetClosestBone(vehicle, Game.Player.Character.Position);
-                if (closestBone != null)
-                {
-                    string boneName = closestBone.Item1;
-                    VehicleDoor door = null;
-                    bool loose = false;
+                if (closestBone == null || vehicle.LockStatus != VehicleLockStatus.Unlocked) return;
 
-                    switch (boneName)
+                string boneName = closestBone.Item1;
+                VehicleDoor door = null;
+
+                switch (boneName)
+                {
+                    case "door_dside_f":
+                        door = vehicle.Doors[VehicleDoorIndex.FrontLeftDoor];
+                        break;
+                    case "door_dside_r":
+                        door = vehicle.Doors[VehicleDoorIndex.BackLeftDoor];
+                        break;
+                    case "door_pside_f":
+                        door = vehicle.Doors[VehicleDoorIndex.FrontRightDoor];
+                        break;
+                    case "door_pside_r":
+                        door = vehicle.Doors[VehicleDoorIndex.BackRightDoor];
+                        break;
+                    case "boot":
+                        door = vehicle.Doors[VehicleDoorIndex.Trunk];
+                        break;
+                    case "bonnet":
+                        door = vehicle.Doors[VehicleDoorIndex.Hood];
+                        break;
+                }
+                
+                if (handler_debugEnabled)
+                {
+                    N.DrawMarker(3, closestBone.Item2, 0.3f, 120, 120, 120, 80, false, true);
+                }
+
+                if (Game.IsControlJustPressed(doorControl) && door != null && !door.IsBroken)
+                {
+                    if (door.IsOpen)
                     {
-                        case "door_dside_f":
-                            door = vehicle.Doors[VehicleDoorIndex.FrontLeftDoor];
-                            loose = true;
-                            break;
-                        case "door_dside_r":
-                            door = vehicle.Doors[VehicleDoorIndex.BackLeftDoor];
-                            loose = true;
-                            break;
-                        case "door_pside_f":
-                            door = vehicle.Doors[VehicleDoorIndex.FrontRightDoor];
-                            loose = true;
-                            break;
-                        case "door_pside_r":
-                            door = vehicle.Doors[VehicleDoorIndex.BackRightDoor];
-                            loose = true;
-                            break;
-                        case "boot":
-                            door = vehicle.Doors[VehicleDoorIndex.Trunk];
-                            loose = false;
-                            break;
-                        case "bonnet":
-                            door = vehicle.Doors[VehicleDoorIndex.Hood];
-                            loose = false;
-                            break;
+                        door.Close(false);
                     }
-                    
-                    if (door != null && !door.IsBroken)
+                    else
                     {
-                        if (handler_debugEnabled)
-                        {
-                            N.DrawMarker(3, closestBone.Item2, 0.3f, 120, 120, 120, 80, false, true);
-                        }
-                        
-                        if (Game.IsControlJustPressed(doorControl))
-                        {
-                            if (door.IsOpen)
-                            {
-                                door.Close(false);
-                            }
-                            else
-                            {
-                                door.Open(true, false);
-                                vehicle.LockStatus = VehicleLockStatus.Unlocked;
-                            }
-                        }
+                        door.Open(false, false);
+                        vehicle.LockStatus = VehicleLockStatus.Unlocked;
                     }
                 }
             }
@@ -459,45 +464,55 @@ namespace AdvancedInteractionSystem
         }
 
         // TOGGLE IGNITION: 
+        private static readonly object toggleLock = new object();
+
         public static void ToggleIgnition()
         {
             try
             {
-                if (LemonMenu.pool.AreAnyVisible) return;
-                Vehicle currentVehicle = Game.Player.Character.CurrentVehicle;
-                if (currentVehicle == null || toggleInProgress) return;
+                lock (toggleLock)
+                {
+                    if (LemonMenu.pool.AreAnyVisible) return;
+                    Vehicle currentVehicle = Game.Player.Character.CurrentVehicle;
+                    if (currentVehicle == null || toggleInProgress) return;
+
+                    toggleInProgress = true;
+
+                    bool engineRunning = currentVehicle.IsEngineRunning;
+                    float engineHealth = currentVehicle.EngineHealth;
+                    float engineTemp = currentVehicle.EngineTemperature;
+                    bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
+
+                    // if the engine is currently running we need to turn it off: 
+                    if (engineRunning)
+                    {
+                        // Disable Ignition: 
+                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, false, false, true);
+                        isEngineOff = true;
+                    }
+                    // engine is not running -> turn it on, as long as the engine is healthy: 
+                    else if (!engineRunning && engineHealth > 0f && isTempSafe)
+                    {
+                        // Enable Ignition: 
+                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
+                        isEngineOff = false;
+                    }
+                    if (handler_debugEnabled)
+                    {
+                        N.ShowSubtitle("Turning key in vehicle's ignition.", 1000);
+                    }
+                }
                 
-                toggleInProgress = true;
-
-                bool engineRunning = currentVehicle.IsEngineRunning;
-                float engineHealth = currentVehicle.EngineHealth;
-                float engineTemp = currentVehicle.EngineTemperature;
-                bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
-
-                // if the engine is currently running we need to turn it off: 
-                if (engineRunning)
-                {
-                    // Disable Ignition: 
-                    N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, false, false, true);
-                    isEngineOff = true;
-                }
-                // engine is not running -> turn it on, as long as the engine is healthy: 
-                else if (!engineRunning && engineHealth > 0f && isTempSafe)
-                {
-                    // Enable Ignition: 
-                    N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
-                    isEngineOff = false;
-                }
-                if (handler_debugEnabled)
-                {
-                    N.ShowSubtitle("Turning key in vehicle's ignition.", 1000);
-                }
             }
             catch (Exception ex)
             {
                 AIS.LogException("InteractionHandler.ToggleIgnition", ex);
                 isEngineOff = false;
                 isEngineOff = false;
+                toggleInProgress = false;
+            }
+            finally
+            {
                 toggleInProgress = false;
             }
         }
@@ -530,10 +545,13 @@ namespace AdvancedInteractionSystem
                     toggleInProgress = false;
                 }
 
-                if (Game.IsControlPressed(Control.VehicleAccelerate) && isEngineOff)
+                if (SettingsManager.ignitionByThrottleEnabled)
                 {
-                    N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
-                    isEngineOff = false;
+                    if (Game.IsControlPressed(Control.VehicleAccelerate) && isEngineOff)
+                    {
+                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
+                        isEngineOff = false;
+                    }
                 }
             }
             catch (Exception ex)

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
 using GTA;
-using GTA.UI;
-using Screen = GTA.UI.Screen;
 using GTA.Native;
 using GTA.Math;
 using System.Collections.Generic;
-using System.Text;
-using System.Windows.Forms;
+using System.Drawing;
+using System.Threading;
 using System.Linq;
 
 namespace AdvancedInteractionSystem
@@ -19,7 +17,6 @@ namespace AdvancedInteractionSystem
         public static string modName = "Advanced Interaction System";
         public static bool modEnabled = SettingsManager.modEnabled;
 
-        
         public static float Clamp(float value, float min, float max)
         {
             return Math.Max(min, Math.Min(value, max));
@@ -84,8 +81,6 @@ namespace AdvancedInteractionSystem
             return weatherCondition;
         }
 
-        
-
         public static void CreateBlip(Vector3 position, BlipSprite sprite, BlipColor color, string blipName, List<Blip> blips)
         {
             if (position == null || blips == null) return;
@@ -135,21 +130,6 @@ namespace AdvancedInteractionSystem
                 }
             }
             blips.Clear();
-        }
-
-        public static bool IsVehicleLocked(Vehicle vehicle)
-        {
-            return Function.Call<bool>(Hash.GET_VEHICLE_DOORS_LOCKED_FOR_PLAYER, vehicle);
-        }
-
-        public static void UnlockVehicle()
-        {
-
-        }
-
-        public static void LockVehicle()
-        {
-
         }
 
         public AIS()

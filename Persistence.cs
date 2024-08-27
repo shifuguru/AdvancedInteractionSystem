@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using System.IO;
@@ -6,6 +8,8 @@ using System.Collections.Generic;
 using GTA;
 using GTA.Math;
 using GTA.Native;
+using GTA.UI;
+using System.Linq;
 
 namespace AdvancedInteractionSystem
 {
@@ -23,16 +27,35 @@ namespace AdvancedInteractionSystem
         public int ModelHash { get; set; }
         public Vector3 Position { get; set; }
         public float Heading { get; set; }
-        public string ModelName { get; set; }
+        public string BrandName { get; set; }
+        public string LocalizedName { get; set; }
+        public string FullName { get; set; }
         public int PrimaryColor { get; set; }
         public int SecondaryColor { get; set; }
         // public float FuelLevel { get; set; }
         // public Dictionary<int, int> Modifications { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is VehicleData other)
+            {
+                return LicensePlate == other.LicensePlate &&
+                    ModelHash == other.ModelHash &&
+                    Owner == other.Owner;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return LicensePlate.GetHashCode() ^ ModelHash.GetHashCode() ^ Owner.GetHashCode();
+        }
     }
-    
+
     public class Persistence : Script
     {
         public static bool persistence_debugEnabled = SettingsManager.persistence_debugEnabled;
+        public static float persistenceDistance = SettingsManager.persistenceDistance;
         public static Model carKeyModel = new Model("lr_prop_carkey_fob");
         public static string xmlPath = "scripts\\AIS\\vehicles";
         public static bool IsVehicleLoaded = false;
@@ -41,215 +64,274 @@ namespace AdvancedInteractionSystem
         public static Control saveKey = (Control)51;
         public static bool dispVehName = false;
         public static bool saveDamage = true;
+        public static PlayerCharacter owner;
 
-        public static List<Blip> carBlips = new List<Blip>();
+        // PROP: Carkey Fob ~
+        public static Entity carkeyProp;
+        public static int lr_prop_carkey_fob = -1341933582;
+        public static Vector3 carkeyObjectPosition = new Vector3(0.0700006f, 0.0100001f, -0.0100001f);
+        public static Vector3 carkeyObjectRotation = new Vector3(112.32f, 5.76f, -15.84f);
 
-        private Dictionary<PlayerCharacter, List<VehicleData>> playerVehicles = new Dictionary<PlayerCharacter, List<VehicleData>>();
-       
-        public List<VehicleData> GetVehiclesForPlayer(PlayerCharacter player)
-        {
-            return playerVehicles.ContainsKey(player) ? playerVehicles[player] : new List<VehicleData>();
-        }
-        
-        private void DeleteAllBlips()
-        {
-            foreach (Blip blip in carBlips)
-            {
-                blip.Delete();
-            }
-            carBlips.Clear();
-        }
-        private void CreateBlip(Vehicle vehicle)
-        {
-            Blip blip = World.CreateBlip(vehicle.Position);
-            blip.Name = Function.Call<string>(Hash.GET_MAKE_NAME_FROM_VEHICLE_MODEL, vehicle.Model) + " " + vehicle.LocalizedName;
-            blip.Color = BlipColor.White;
-            blip.Sprite = BlipSprite.PersonalVehicleCar;
-            blip.IsShortRange = false;
-            carBlips.Add(blip);
-        }
 
-        private void RunPersistence(Vehicle lastVehicle)
-        {
-            if (lastVehicle == null) return;
-            Vehicle closestVehicle = World.GetClosestVehicle(Game.Player.Character.Position, 15f);
-            if (closestVehicle == null) return;
-            
-            if (closestVehicle != lastVehicle) return;
-
-            VehicleLockStatus lockStatus = lastVehicle.LockStatus;
-
-            if (lockStatus == VehicleLockStatus.CannotEnter)
-            {
-                N.ShowHelpText($"Press ~INPUT_CONTEXT~ to unlock the {lastVehicle.LocalizedName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
-
-                if (Game.IsControlJustReleased(Control.Context))
-                {
-                    lastVehicle.LockStatus = VehicleLockStatus.Unlocked;
-                }
-                if (Game.IsControlJustReleased(Control.ContextSecondary))
-                {
-                    RemoveVehicle(lastVehicle);
-                }
-            }
-            else
-            {
-                N.ShowHelpText($"Press ~INPUT_CONTEXT~ to lock the {lastVehicle.LocalizedName}");
-
-                if (Game.IsControlJustReleased(Control.Context))
-                {
-                    lastVehicle.LockStatus = VehicleLockStatus.CannotEnter;
-                    SaveVehicle(lastVehicle, GetPlayerCharacter(Game.Player.Character));
-                }
-            }
-        }
+        // Maps each player character to a list of vehicles they own: 
+        public static Dictionary<PlayerCharacter, List<VehicleData>> playerVehicleRegistry = new Dictionary<PlayerCharacter, List<VehicleData>>();
 
         public Persistence()
         {
-            // Initialise Player Vehicles Dictionary: 
-            foreach (PlayerCharacter player in Enum.GetValues(typeof(PlayerCharacter)))
-            {
-                playerVehicles[player] = new List<VehicleData>();
-            }
-
             Tick += OnTick;
             Aborted += OnAborted;
-            LoadAllVehicles();
+
+            LoadPlayerVehicleRegistry();
         }
+
+
+        private void LoadPlayerVehicleRegistry()
+        {
+            playerVehicleRegistry.Clear();
+
+            foreach (PlayerCharacter player in Enum.GetValues(typeof(PlayerCharacter)))
+            {
+                playerVehicleRegistry[player] = new List<VehicleData>();
+
+                string directoryPath = Path.Combine(xmlPath, player.ToString());
+                if (Directory.Exists(directoryPath))
+                {
+                    string[] files = Directory.GetFiles(directoryPath, "*.xml");
+                    foreach (string file in files)
+                    {
+                        VehicleData data = LoadVehicleFromXml(file);
+                        if (data != null)
+                        {
+                            playerVehicleRegistry[player].Add(data);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SavePlayerVehicleRegistry()
+        {
+            foreach (var entry in playerVehicleRegistry)
+            {
+                PlayerCharacter player = entry.Key;
+                List<VehicleData> vehicles = entry.Value;
+
+                string directoryPath = Path.Combine(xmlPath, player.ToString());
+                if (!Directory.Exists(directoryPath))
+                {
+                    Directory.CreateDirectory(directoryPath);
+                }
+
+                foreach (VehicleData data in vehicles)
+                {
+                    SaveVehicleToXml(data);
+                }
+            }
+        }
+
+        private void OnTick(object sender, EventArgs e)
+        {
+            if (Game.IsLoading || Game.IsPaused || !SettingsManager.modEnabled || !SettingsManager.persistenceEnabled) 
+                return;
+
+            Ped GPC = Game.Player.Character;
+            if (GPC == null || !GPC.IsOnFoot || Game.IsControlPressed(Control.Aim))
+                return;
+            owner = GetPlayerCharacter(GPC);
+
+            Vehicle lastVehicle = GPC.LastVehicle;
+            if (lastVehicle != null && lastVehicle.Exists() && !IsVehicleOwned(owner, lastVehicle))
+            {
+                SaveVehicle(owner, lastVehicle);
+            }
+            
+            Vehicle closestVehicle = World.GetClosestVehicle(GPC.Position, persistenceDistance);
+            if (closestVehicle != null && closestVehicle.Exists())
+            {
+                InteractWithClosestVehicle(closestVehicle);
+            }
+        }
+
+        private void InteractWithClosestVehicle(Vehicle vehicle)
+        {
+            if (vehicle == null)
+                return;
+
+            VehicleData data = CreateVehicleData(vehicle, owner);
+
+            bool isOwned = playerVehicleRegistry[owner].Any(v => v.Equals(data));
+            VehicleLockStatus lockStatus = vehicle.LockStatus;
+
+            if (isOwned)
+            {
+                N.ShowHelpText($"Press ~INPUT_CONTEXT~ to {(lockStatus == VehicleLockStatus.CannotEnter ? "unlock" : "lock")} the {data.FullName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
+
+                if (Game.IsControlJustReleased(Control.ContextSecondary))
+                {
+                    AbandonVehicle(vehicle);
+                }
+                else if (Game.IsControlJustReleased(Control.Context))
+                {
+                    if (lockStatus == VehicleLockStatus.CannotEnter)
+                    {
+                        N.ShowHelpText($"Press ~INPUT_CONTEXT~ to unlock the {data.FullName} or ~INPUT_CONTEXT_SECONDARY~ to abandon it");
+                        UnlockVehicle(vehicle);
+                    }
+                    else
+                    {
+                        LockVehicle(vehicle);
+                        // SaveVehicle(closestVehicle, GetPlayerCharacter(Game.Player.Character));
+                    }
+                }
+            }
+        }
+
+
 
         private PlayerCharacter GetPlayerCharacter(Ped player)
         {
-            string playerName = Function.Call<string>(Hash.GET_PLAYER_NAME, Game.Player.Character);
+            Player gamePlayer = Function.Call<Player>(Hash.GET_PLAYER_NAME, player);
+            string playerName = Function.Call<string>(Hash.GET_PLAYER_PED, gamePlayer);
+
+            if (persistence_debugEnabled && !string.IsNullOrEmpty(playerName))
+            {
+                N.ShowSubtitle($"Owner: {playerName}", 500);
+            }
 
             switch (playerName)
             {
-                case "Michael":
+                case "MICHAEL":
                     return PlayerCharacter.Michael;
-                case "Franklin":
+                case "FRANKLIN":
                     return PlayerCharacter.Franklin;
-                case "Trevor":
+                case "TREVOR":
                     return PlayerCharacter.Trevor;
                 default:
                     return PlayerCharacter.Other;
             }
         }
 
-        private void OnTick(object sender, EventArgs e)
+        private bool IsVehicleOwned(PlayerCharacter owner, Vehicle vehicle)
         {
-            if (!Game.IsLoading || !Game.IsPaused)
-            {
-                if (!SettingsManager.modEnabled || !SettingsManager.persistenceEnabled) 
-                    return;
-
-                Ped GPC = Game.Player.Character; 
-                if (GPC == null) return;
-                if (!GPC.IsOnFoot || Game.IsControlPressed(Control.Aim)) return;
-
-                Vehicle lastVehicle = GPC.LastVehicle;
-
-                if (lastVehicle != null)
-                {
-                    RunPersistence(lastVehicle);
-                }
-            }
+            return playerVehicleRegistry[owner].Any(v => v.LicensePlate == vehicle.Mods.LicensePlate);
         }
 
-        private void SaveVehicleToXml(VehicleData data)
+        public static void UnlockVehicle(Vehicle vehicle)
         {
-            string fileName = $"{data.LicensePlate}.xml";
-            string fullPath = Path.Combine(xmlPath, fileName);
-
-            XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
-
-            using (FileStream stream = new FileStream(fullPath, FileMode.Create))
+            if (persistence_debugEnabled)
             {
-                serializer.Serialize(stream, data);
+                N.ShowSubtitle($"{vehicle.LocalizedName} unlocked", 2500);
             }
 
-            N.ShowSubtitle($"Vehicle {data.ModelName} saved to XML!", 2500);
+            PlayLockingAnimation(vehicle, 1500);
+            PlayUnlockSound();
+
+            vehicle.IsAlarmSet = false;
+            vehicle.LockStatus = VehicleLockStatus.Unlocked;
         }
 
-        private VehicleData LoadVehicleFromXml(string fileName)
+        public static void LockVehicle(Vehicle vehicle)
+        {
+            if (persistence_debugEnabled)
+            {
+                N.ShowSubtitle($"{vehicle.LocalizedName} locked", 2500);
+            }
+
+            PlayLockingAnimation(vehicle, 1500);
+            PlayLockSound();
+
+            vehicle.LockStatus = VehicleLockStatus.CannotEnter;
+            vehicle.IsAlarmSet = true;
+        }
+
+        private void AbandonVehicle(Vehicle vehicle)
         {
             try
             {
+                if (vehicle == null) return;
+
+                //PlayerCharacter owner = GetPlayerCharacter(Game.Player.Character);
+                VehicleData data = CreateVehicleData(vehicle, owner);
+
+                playerVehicleRegistry[owner].Remove(data);
+
+                if (persistence_debugEnabled)
+                {
+                    N.ShowSubtitle($"Vehicle {data.FullName} abandoned", 2500);
+                }
+
+                vehicle.IsPersistent = false;
+                vehicle.MarkAsNoLongerNeeded();
+                
+                Blip blip = vehicle.AttachedBlip;
+
+                if (blip != null && carBlips.Contains(blip))
+                {
+                    if (blip.Exists())
+                    {
+                        blip.Delete();
+                    }
+                    carBlips.Remove(blip);
+                }
+
+                /*
+                string plate = vehicle.Mods.LicensePlate;
+                string fileName = $"{plate}.xml";
                 string fullPath = Path.Combine(xmlPath, fileName);
 
                 if (File.Exists(fullPath))
                 {
-                    XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
-
-                    using (FileStream stream = new FileStream(xmlPath, FileMode.Open))
+                    if (persistence_debugEnabled)
                     {
-                        return (VehicleData)serializer.Deserialize(stream);
+                        N.ShowSubtitle($"Vehicle {vehicle.LocalizedName} removed. File {plate} deleted", 2500);
                     }
+                    // File.Delete(fullPath);
                 }
-                return null;
+                */
+
+                if (vehicle.Exists())
+                {
+                    /*
+                    Function.Call(Hash.SET_ENTITY_AS_NO_LONGER_NEEDED, vehicle);
+                    vehicle.MarkAsNoLongerNeeded();
+                    vehicle.IsPersistent = false;
+                    */
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                AIS.LogException("AbandonVehicle - Access Denied", ex);
+            }
+            catch (IOException ex)
+            {
+                AIS.LogException("AbandonVehicle - File I/O Error", ex);
             }
             catch (Exception ex)
             {
-                AIS.LogException("LoadVehicleFromXml", ex);
-                return null;
+                AIS.LogException("AbandonVehicle", ex);
             }
         }
 
-        private void LoadAllVehicles()
-        {
-            DeleteAllBlips();
-
-            if (!Directory.Exists(xmlPath))
-            {
-                Directory.CreateDirectory(xmlPath);
-            }
-            string[] files = Directory.GetFiles(xmlPath, "*.xml");
-
-            foreach (string file in files)
-            {
-                VehicleData data = LoadVehicleFromXml(Path.GetFileName(file));
-
-                if (data != null)
-                {
-                    if (!playerVehicles.ContainsKey(data.Owner))
-                    {
-                        playerVehicles[data.Owner] = new List<VehicleData>();
-                    }
-
-                    playerVehicles[data.Owner].Add(data);
-                }
-            }
-
-            if (persistence_debugEnabled)
-            {
-                N.ShowSubtitle($"Loaded {files.Length} vehicle(s) from XML.", 2500);
-            }
-        }
-
-        private void SaveVehicle(Vehicle vehicle, PlayerCharacter owner)
+        private void SaveVehicle(PlayerCharacter owner, Vehicle vehicle)
         {
             try
             {
                 if (vehicle != null)
                 {
-                    CreateBlip(vehicle);
+                    VehicleData data = CreateVehicleData(vehicle, owner);
 
-                    VehicleData data = new VehicleData
+                    if (!playerVehicleRegistry[owner].Contains(data))
                     {
-                        Owner = owner,
-                        LicensePlate = vehicle.Mods.LicensePlate,
-                        ModelHash = vehicle.Model.Hash,
-                        ModelName = vehicle.LocalizedName,
-                        Position = vehicle.Position,
-                        Heading = vehicle.Heading,
-                        PrimaryColor = (int)vehicle.Mods.PrimaryColor,
-                        SecondaryColor = (int)vehicle.Mods.SecondaryColor,
-                        // FuelLevel = Fuel.currentFuel
-                    };
-                    playerVehicles[owner].Add(data);
-                    SaveVehicleToXml(data);
+                        AIS.CreateBlip(vehicle.Position, BlipSprite.PersonalVehicleCar, BlipColor.White, data.FullName, carBlips);
+                        playerVehicleRegistry[owner].Add(data);
+                        SaveVehicleToXml(data);
 
-                    Function.Call(Hash.SET_ENTITY_AS_MISSION_ENTITY, vehicle, true, true);
-                    
-                    if (persistence_debugEnabled)
+                        if (persistence_debugEnabled)
+                        {
+                            N.ShowSubtitle($"Vehicle {data.FullName} saved for Player {owner}!", 2500);
+                        }
+                    }
+                    else if (persistence_debugEnabled)
                     {
                         N.ShowSubtitle($"Vehicle {vehicle.LocalizedName} saved for Player {owner}!", 2500);
                     }
@@ -265,34 +347,154 @@ namespace AdvancedInteractionSystem
             }
 
         }
-        private void RemoveVehicle(Vehicle vehicle)
+
+
+        public static Entity AttachKeyFobObject()
         {
-            if (vehicle == null) return;
-            if (vehicle.AttachedBlip != null)
+            try
             {
-                Blip blip = vehicle.AttachedBlip;
-                if (carBlips.Contains(blip))
+                Ped GPC = Game.Player.Character;
+                if (GPC.Bones[28422].Index != -1)
                 {
-                    carBlips.Remove(blip);
+                    // Prop prop = World.CreateProp(lr_prop_carkey_fob, Vector3.Add(GPC.Position, GPC.ForwardVector), Vector3.Zero, true, false);
+                    // prop.AttachTo(GPC, GPC.Bones[28422], Vector3.Zero, Vector3.Zero);
+
+                    int handle = Function.Call<int>(Hash.CREATE_OBJECT, lr_prop_carkey_fob, GPC.Position.X, GPC.Position.Y, GPC.Position.Z, true, true, true);
+                    Function.Call(Hash.ATTACH_ENTITY_TO_ENTITY, handle, GPC, GPC.Bones[28422].Index, carkeyObjectPosition.X, carkeyObjectPosition.Y, carkeyObjectPosition.Z, carkeyObjectRotation.X, carkeyObjectRotation.Y, carkeyObjectRotation.Z, false, false, false, false, 2, true);
+                    return Entity.FromHandle(handle);
                 }
-                blip.Delete();
             }
-            
-            Function.Call(Hash.SET_ENTITY_AS_NO_LONGER_NEEDED, vehicle);
-
-            string fileName = $"{vehicle.Mods.LicensePlate}.xml";
-            string fullPath = Path.Combine(xmlPath, fileName);
-
-            if (File.Exists(fullPath))
+            catch (Exception ex)
             {
-                File.Delete(fullPath);
-                N.ShowSubtitle($"Vehicle {vehicle.LocalizedName} removed. File {fileName} deleted", 2500);
+                AIS.LogException("AIS.AttachKeyFobObject", ex);
+            }
+            return null;
+        }
+
+        public static void PlayLockingAnimation(Vehicle vehicle, int duration)
+        {
+            try
+            {
+                if (vehicle == null) return;
+
+                Ped ped = Game.Player.Character;
+                Function.Call(Hash.SET_PED_CURRENT_WEAPON_VISIBLE, ped, false); // Not sure if this is a good function to use...
+
+                carkeyProp = AttachKeyFobObject();
+
+                Game.Player.Character.Task.PlayAnimation("anim@mp_player_intmenu@key_fob@", "fob_click_fp", 10f, 1500, (AnimationFlags)49);
+                Game.Player.Character.Task.LookAt(vehicle.Position, duration);
+
+                // Script.Wait(500);
+                carkeyProp.Detach();
+                carkeyProp.Delete();
+                // Script.Wait(500);
+                Function.Call(Hash.SET_PED_CURRENT_WEAPON_VISIBLE, ped, true);
+            }
+            catch (Exception ex)
+            {
+                AIS.LogException("AIS.PlayLockingAnimation", ex);
             }
         }
-        
+
+        public static void PlayLockSound()
+        {
+            AudioManager.PlaySound("lock.wav");
+        }
+
+        public static void PlayUnlockSound()
+        {
+            AudioManager.PlaySound("unlock.wav");
+        }
+
+        // Functions: 
+        #region Functions:
+        private VehicleData CreateVehicleData(Vehicle vehicle, PlayerCharacter owner)
+        {
+            return new VehicleData
+            {
+                Owner = owner,
+                LicensePlate = vehicle.Mods.LicensePlate,
+                ModelHash = vehicle.Model.Hash,
+                BrandName = Game.GetLocalizedString(N.GetMakeNameFromModel(vehicle.Model)),
+                LocalizedName = vehicle.LocalizedName,
+                FullName = $"{Game.GetLocalizedString(N.GetMakeNameFromModel(vehicle.Model))} {vehicle.LocalizedName}",
+                Position = vehicle.Position,
+                Heading = vehicle.Heading,
+                PrimaryColor = (int)vehicle.Mods.PrimaryColor,
+                SecondaryColor = (int)vehicle.Mods.SecondaryColor,
+            };
+        }
+
+        #endregion
+
+
+        public static List<Blip> carBlips = new List<Blip>();
+
+        public static void SaveVehicleToXml(VehicleData data)
+        {
+            try
+            {
+                string fileName = $"{data.LicensePlate}.xml";
+                string fullPath = Path.Combine(xmlPath, fileName);
+
+                XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
+
+                using (FileStream stream = new FileStream(fullPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    serializer.Serialize(stream, data);
+                }
+
+                FileSecurity fileSecurity = new FileSecurity();
+                fileSecurity.AddAccessRule(new FileSystemAccessRule(
+                    new SecurityIdentifier(WellKnownSidType.WorldSid, null),
+                    FileSystemRights.Read | FileSystemRights.Write,
+                    AccessControlType.Allow));
+
+                File.SetAccessControl(fullPath, fileSecurity);
+
+                if (persistence_debugEnabled)
+                {
+                    N.ShowSubtitle($"{data.FullName} : {data.LicensePlate} : {data.Owner} saved to {xmlPath}", 2500);
+                }
+            }
+            catch (Exception ex)
+            {
+                AIS.LogException("Persistence.SaveVehicleToXml", ex);
+            }   
+        }
+        public static VehicleData LoadVehicleFromXml(string fileName)
+        {
+            try
+            {
+                string fullPath = Path.Combine(xmlPath, fileName);
+
+                if (File.Exists(fullPath))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(VehicleData));
+
+                    using (FileStream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        return (VehicleData)serializer.Deserialize(stream);
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                AIS.LogException("LoadVehicleFromXml", ex);
+                return null;
+            }
+        }
+
+
+
+
         private void OnAborted(object sender, EventArgs e)
         {
-            DeleteAllBlips();
+            SavePlayerVehicleRegistry();
+            AIS.DeleteAllBlips(carBlips);
+            playerVehicleRegistry.Clear();
         }
     }
 }

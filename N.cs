@@ -124,6 +124,11 @@ namespace AdvancedInteractionSystem
             else return "Other";
         }
 
+        public static bool IsVehicleLocked(Vehicle vehicle)
+        {
+            return Function.Call<bool>(Hash.GET_VEHICLE_DOORS_LOCKED_FOR_PLAYER, vehicle);
+        }
+
         // .. 
 
         public static float GetEntityRoll(Entity entity)
