@@ -47,9 +47,16 @@ namespace AdvancedInteractionSystem
                 if (!cleaning || closestVehicle == null || !closestVehicle.Exists())
                     return;
 
+                Vehicle vehicle = InteractionManager.closestVehicle;
+                if (vehicle == null || !vehicle.Exists() || vehicle.IsDead)
+                {
+                    InteractionManager.CancelActions();
+                    return;
+                }
+
                 if ((DateTime.Now - actionStartTime).TotalSeconds >= washDuration)
                 {
-                    CleanVehicle(closestVehicle);
+                    CleanVehicle(vehicle);
                 }
             }
             catch (Exception ex)

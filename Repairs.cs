@@ -18,7 +18,10 @@ namespace AdvancedInteractionSystem
         public static Vector3 repairObjectPosition = new Vector3(0.0700006f, 0.0100001f, -0.0100001f);
         public static Vector3 repairObjectRotation = new Vector3(112.32f, 5.76f, -15.84f);
         public static DateTime actionStartTime;
+        public const float maxHealth = 1000f;
+        public static float engineHealth;
         public static bool isRepairing = false;
+        public static float repairAmount = Math.Min(maxHealth, engineHealth + 1f);
 
         public Repairs()
         {
@@ -30,83 +33,72 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (isRepairing && !Cleaning.cleaning)
+                if (!isRepairing) return;
+
+                Vehicle vehicle = InteractionManager.closestVehicle;
+                if (vehicle == null || !vehicle.Exists() || vehicle.IsDead)
                 {
-                    Vehicle vehicle = InteractionManager.closestVehicle;
-                    if (vehicle == null || vehicle.IsDead)
-                    {
-                        InteractionManager.CancelActions();
-                        return;
-                    }
+                    InteractionManager.CancelActions();
+                    return;
+                }
 
-                    float engineHealth = vehicle.EngineHealth;
+                engineHealth = vehicle.EngineHealth;
+                if (engineHealth < vehicle.MaxHealth)
+                {
+                    vehicle.EngineHealth += repairAmount;
 
-                    if (engineHealth < vehicle.MaxHealth)
+                    if (repairs_debugEnabled)
                     {
-                        vehicle.EngineHealth = Math.Min(vehicle.MaxHealth, engineHealth + 1f);
+                        N.ShowSubtitle($"Repairing Engine: {engineHealth} / 1000", 200);
                     }
-                    else
-                    {
-                        if (repairBodyDamage)
-                        {
-                            vehicle.Repair();
-                        }
-                        CompleteRepair(vehicle);
-                    }
+                }
+                else
+                {
+                    CompleteRepair(vehicle);
                 }
             }
             catch (Exception ex)
             {
                 AIS.LogException("Repairs.OnTick()", ex);
             }
-            
         }
-
 
         // Start Repair Process: 
         public static void StartRepairProcess(Vehicle vehicle)
         {
             try
             {
+                if (vehicle == null || !vehicle.Exists() || vehicle.IsDead)
+                {
+                    // InteractionManager.CancelActions();
+                    return;
+                }
+
+                // If the engine is running and repairs require engine off (realistic)
+                if (repairRequiresEngineOff && vehicle.IsEngineRunning)
+                {
+                    N.DisplayNotification($"~o~Engine must be off prior to repair.~s~", false);
+                    return;
+                }
+
+                // If vehicle's health is too low we cannot repair it. 
+                if (vehicle.EngineHealth <= 100f)
+                {
+                    N.DisplayNotification("~r~Engine cannot be repaired~s~", false);
+                    return;
+                }
+
                 if (!isRepairing)
                 {
-                    // this method runs each time the repair control is pressed. 
-                    if (vehicle == null)
-                    {
-                        if (repairs_debugEnabled)
-                        {
-                            N.ShowSubtitle("~r~Repair Failed: No vehicle found~s~", 300);
-                        }
-                        return;
-                    }
-                    if (vehicle.IsDead)
-                    {
-                        if (repairs_debugEnabled)
-                        {
-                            N.ShowSubtitle("~r~Vehicle is beyond repair~s~", 300);
-                        }
-                        return;
-                    }
-                    if (repairRequiresEngineOff && vehicle.IsEngineRunning)
-                    {
-                        N.DisplayNotification($"~o~Engine must be off prior to repair.~s~", false);
-                        return;
-                    }
-                    if (repairs_debugEnabled)
-                    {
-                        if (repairs_debugEnabled)
-                        {
-                            N.ShowSubtitle("Starting Repairing Process...", 1000);
-                        }                        
-                    }
-                    
-                    InteractionHandler.LookAtVehicle(vehicle, 2000);
-                    InteractionHandler.OpenVehicleDoors(vehicle);
-                    repairProp = AttachRepairObject();
-                    actionStartTime = DateTime.Now;
-                    PlayRepairAnimation();                    
                     isRepairing = true;
-                }                
+                }
+
+                InteractionHandler.LookAtVehicle(vehicle, 2000);
+                InteractionHandler.OpenVehicleDoors(vehicle);
+                repairProp = AttachRepairObject();
+                PlayRepairAnimation();
+                actionStartTime = DateTime.Now;
+                
             }
             catch (Exception ex)
             {
@@ -174,6 +166,11 @@ namespace AdvancedInteractionSystem
                 InteractionManager.CompleteActions();
                 Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
                 
+                if (repairBodyDamage)
+                {
+                    vehicle.Repair();
+                }
+                
                 if (repairProp != null && repairProp.Exists())
                 {
                     repairProp.Detach();
@@ -185,7 +182,7 @@ namespace AdvancedInteractionSystem
 
                 if (repairs_debugEnabled)
                 {
-                    N.ShowSubtitle("Repair Complete", 300);
+                    N.ShowSubtitle("~g~Repair Complete~s~", 300);
                 }
             }
             catch (Exception ex)

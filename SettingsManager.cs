@@ -30,6 +30,7 @@ namespace AdvancedInteractionSystem
         public static bool fuel_debugEnabled = true;
         public static bool fuelEnabled = true; // Enable the Vehicle Fuel System Module. 
         // Ignition:
+        public static bool ignition_debugEnabled = true;
         public static bool ignitionControlEnabled = true; // Enable the Vehicle Engine Button/Key. 
         public static bool ignitionByThrottleEnabled = true; // Enable starting the vehicle by accelerator. 
         // Repairs:
@@ -48,6 +49,7 @@ namespace AdvancedInteractionSystem
 
         // Other Settings: 
         public static Keys menuToggleKey = Keys.F8; // Use this Key to open the Mod's Menu. 
+        public static Keys refuelKey = Keys.Space; // User changeable refuel key - Not currently implemented
         // CONTROLS: 
         public const Control studyControl = Control.Cover;
         public const Control cleanControl = Control.MeleeAttackLight;

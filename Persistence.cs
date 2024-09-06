@@ -165,7 +165,7 @@ namespace AdvancedInteractionSystem
 
             bool isOwned = playerVehicleRegistry[owner].Any(v => v.Equals(data.LicensePlate));
 
-            N.ShowSubtitle($"{isOwned}", 500);
+            // N.ShowSubtitle($"{isOwned}", 500);
             
             VehicleLockStatus lockStatus = vehicle.LockStatus;
 

@@ -24,80 +24,85 @@ namespace AdvancedInteractionSystem
         public static DateTime ignitionHeldStartTime; // READONLY
         public const float ignitionHoldDuration = 2.5f;
         public static Control ignitionControl = Control.Context;
-        public static int tickCount;
+        public static int exitHeldTime;
+        public static bool toggleInProgress;
         public static bool bypass;
 
         // IGNTION CONTROL: 
-        public static void IVExit(Ped player, Vehicle vehicle, bool debugEnabled)
+
+        public static void IVExit(Vehicle vehicle)
         {
             try
             {
-                if (vehicle == null || player == null)
+                if (vehicle == null || !vehicle.Exists())
                 {
-                    ignitionHeld = false;
-                    engineToggled = false;
+                    exitHeldTime = 0;
                     return;
                 }
-                if (vehicle.GetPedOnSeat(VehicleSeat.Driver) == player)
+
+                if (vehicle.GetPedOnSeat(VehicleSeat.Driver) == Game.Player.Character)
                 {
                     bool exitHeld = Game.IsControlPressed(Control.VehicleExit);
+
                     if (bypass || exitHeld && vehicle.LockStatus.Equals(1))
                     {
                         if (!exitHeld)
                         {
-                            player.Task.LeaveVehicle(vehicle, true);
+                            Game.Player.Character.Task.LeaveVehicle();
                         }
-                        ++tickCount;
-                        if (tickCount < 11)
+                        ++exitHeldTime;
+                        // Game.Player.Character.Task.LeaveVehicle(vehicle, true);
+                        if (exitHeldTime < 11)
                         {
                             bypass = true;
                             vehicle.IsEngineRunning = true;
+                            // LeaveEngineRunning(vehicle);
                             return;
                         }
-                        if (tickCount < 211) return;
+                        if (exitHeldTime < 211) return;
                         vehicle.IsEngineRunning = !exitHeld;
-                        if (tickCount < 1211 && !vehicle.IsEngineRunning) return;
+                        if (exitHeldTime < 1211 && !vehicle.IsEngineRunning) return;
                         vehicle.IsEngineRunning = false;
                     }
                 }
                 bypass = false;
-                tickCount = 0;
+                exitHeldTime = 0;
             }
             catch (Exception ex)
             {
                 AIS.LogException("IgnitionHandler.IVExit", ex);
-                ignitionHeld = false;
                 engineToggled = false;
             }
         }
-        public static void ToggleIgnition(Vehicle vehicle, bool debugEnabled)
+        public static void ToggleIgnition(Vehicle vehicle)
         {
             try
             {
-                if (vehicle == null) return;
-                if (vehicle.Exists())
-                {
-                    // TURN ENGINE OFF: 
-                    if (vehicle.IsEngineRunning)
-                    {
-                        Function.Call(Hash.SET_VEHICLE_ENGINE_ON, vehicle, false, false, true);
-                        if (debugEnabled)
-                        {
-                            Screen.ShowSubtitle("Engine ~r~Off~s~.", 2000);
-                        }
-                    }
-                    // TURN ENGINE ON: 
-                    if (!vehicle.IsEngineRunning)
-                    {
-                        Game.Player.Character.Task.PlayAnimation("veh@std@ds@base", "start_engine", 0, 0, 0, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 1);
-                        Function.Call(Hash.SET_VEHICLE_ENGINE_ON, vehicle, true, false, true);
-                        if (debugEnabled)
-                        {
-                            Screen.ShowSubtitle("Engine ~g~On~s~.", 2000);
-                        }
-                    }
+                if (vehicle == null || !vehicle.Exists() || LemonMenu.pool.AreAnyVisible) 
+                    return;
 
+                toggleInProgress = true;
+
+                float engineHealth = vehicle.EngineHealth;
+                float engineTemp = vehicle.EngineTemperature;
+                bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
+
+                // TURN ENGINE OFF: 
+                if (vehicle.IsEngineRunning)
+                {
+                    Game.Player.Character.Task.PlayAnimation("veh@std@ds@base", "start_engine", 0, 0, 0, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 1);
+                    N.SetVehicleEngineOn(vehicle, false, false, true);
+                }
+                // TURN ENGINE ON: 
+                else if (!vehicle.IsEngineRunning)
+                {
+                    Game.Player.Character.Task.PlayAnimation("veh@std@ds@base", "start_engine", 0, 0, 0, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 1);
                     IgnitionStartupChecks(vehicle);
+                    N.SetVehicleEngineOn(vehicle, true, false, true);
+                }
+                if (SettingsManager.ignition_debugEnabled)
+                {
+                    N.ShowSubtitle("Turning key in vehicle's ignition.", 1000);
                 }
             }
             catch (Exception ex)
@@ -109,52 +114,76 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (vehicle == null)
+                if (vehicle == null || !vehicle.Exists())
                     return;
-                if (vehicle != null && vehicle.Exists())
+
+                // VEHICLE HEALTH:
+                if (vehicle.IsEngineRunning)
                 {
-                    // VEHICLE START UP CHECKS: 
                     // ENGINE HEALTH:
-                    if (vehicle.IsEngineRunning)
+                    if (vehicle.EngineHealth <= (vehicle.EngineHealth * 0.2f))
                     {
-                        if (vehicle.EngineHealth <= (vehicle.EngineHealth * 0.2f))
-                        {
-                            Notification.Show($"~y~Warning!~s~ Engine Health at Critical Level: ~r~{vehicle.EngineHealth}~s~.", false);
-                        }
-                        // TYRES:
-                        bool lf_burst = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 0, true); // Left-Front Tyre Burst Completely
-                        bool rf_burst = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 1, true); // Right-Front Tyre Burst Completely
-                        bool lr_burst = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 4, true); // Left-Rear Tyre Burst Completely
-                        bool rr_burst = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 5, true); // Right-Rear Tyre Burst Completely
-                        bool lf_leak = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 0, false); // Left-Front Tyre Burst 
-                        bool rf_leak = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 1, false); // Right-Front Tyre Burst 
-                        bool lr_leak = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 4, false); // Left-Rear Tyre Burst 
-                        bool rr_leak = Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, 5, false); // Right-Rear Tyre Burst 
-
-                        string tyrePressure = $"Tyre Pressure: ";
-
-                        if (lf_leak || rf_leak || lr_leak || rr_leak)
-                        {
-                            tyrePressure += $"~r~Severe Warning!~s~";
-                            // at least 1 tyre is leaking. Warning! ~y~
-                        }
-                        if (lf_burst || rf_burst || lr_burst || rr_burst)
-                        {
-                            // at least 1 tyre burst. Severe warning! ~r~
-                        }
-
-                        // PETROL TANK HEALTH:
-                        if (vehicle.PetrolTankHealth <= (vehicle.PetrolTankHealth * 0.9f))
-                        {
-                            Notification.Show($"~y~Warning!~s~ Fuel Tank damaged: ~r~{vehicle.PetrolTankHealth}~s~.", false);
-                        }
-                        // FUEL:     
+                        Notification.Show($"~y~Warning!~s~ Engine Health at Critical Level: ~r~{vehicle.EngineHealth}~s~.", false);
                     }
+                    // PETROL TANK HEALTH:
+                    if (vehicle.PetrolTankHealth <= (vehicle.PetrolTankHealth * 0.9f))
+                    {
+                        Notification.Show($"~y~Warning!~s~ Fuel Tank damaged: ~r~{vehicle.PetrolTankHealth}~s~.", false);
+                    }
+                    // TYRE PRESSURE: 
+                    InteractionHandler.TyrePressureMonitoringSystem(vehicle);
                 }
             }
             catch (Exception ex)
             {
                 AIS.LogException("IgnitionHandler.IgnitionStartupChecks", ex);
+            }
+        }
+        
+        public static void HandleIgnition(Vehicle vehicle)
+        {
+            try
+            {
+                // While the Control is held:
+                if (Game.IsControlPressed(ignitionControl))
+                {
+                    if (!ignitionHeld && !toggleInProgress)
+                    {
+                        ignitionHeld = true;
+                        toggleInProgress = false;
+                        ignitionHeldStartTime = DateTime.Now;
+                    }
+                    else
+                    {
+                        double heldDuration = (DateTime.Now - ignitionHeldStartTime).TotalSeconds;
+                        if (heldDuration >= ignitionHoldDuration && !toggleInProgress)
+                        {
+                            // Toggle Ignition State:
+                            ToggleIgnition(vehicle);
+                            ignitionHeld = false;
+                            // toggleInProgress = true;
+                        }
+                    }
+                }
+                else
+                {
+                    ignitionHeld = false;
+                    toggleInProgress = false;
+                }
+                
+                if (SettingsManager.ignitionByThrottleEnabled)
+                {
+                    if (Game.IsControlPressed(Control.VehicleAccelerate) && !vehicle.IsEngineRunning)
+                    {
+                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AIS.LogException("InteractionHandler.HandleIgnition", ex);
+                ignitionHeld = false;
+                toggleInProgress = false;
             }
         }
     }

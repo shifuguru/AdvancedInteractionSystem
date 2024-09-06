@@ -25,7 +25,7 @@ namespace AdvancedInteractionSystem
         public static float interactionDistance = 8f;
         public static DateTime ignitionHeldStartTime; // READONLY
         public static bool ignitionHeld; // READONLY
-        public static bool isEngineOff = false;
+        public static bool engineRunning = false;
         public static bool toggleInProgress = false;
         public static float ignitionHoldDuration = 1.5f;
         // handle locked vehicle: 
@@ -47,9 +47,14 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (currentVehicle == null || !currentVehicle.Exists()) return;
+                if (currentVehicle == null || !currentVehicle.Exists() || currentVehicle.IsDead)
+                {
+                    engineRunning = false;
+                    return;
+                }
                 
-                bool engineRunning = currentVehicle.IsEngineRunning;
+                IgnitionHandler.IVExit(currentVehicle);
+                engineRunning = currentVehicle.IsEngineRunning;
                 float engineHealth = currentVehicle.EngineHealth;
                 double engineTemp = Math.Round(currentVehicle.EngineTemperature, 1);
                 bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
@@ -57,26 +62,7 @@ namespace AdvancedInteractionSystem
 
                 if (!isRefueling)
                 {
-                    HandleIgnition();
-
-                    if (engineRunning)
-                    {
-                        if (!isTempSafe)
-                        {
-                            if (engineTemp < 5f)
-                            {
-                                N.DisplayNotification("Engine Temperature: ~b~Low~s~", false);
-                            }
-                            else if (engineTemp > 110f)
-                            {
-                                N.DisplayNotification("Engine Temperature: ~r~High~s~", false);
-                            }
-                        }
-                        if (engineHealth < 400)
-                        {
-                            N.ShowHelpText("~r~Warning: Engine condition critical. Service immediately.~s~");
-                        }
-                    }
+                    IgnitionHandler.HandleIgnition(currentVehicle);
                 }                
             }
             catch (Exception ex)
@@ -91,17 +77,15 @@ namespace AdvancedInteractionSystem
             {
                 if (closestVehicle == null || !closestVehicle.Exists()) return;
 
-                Ped GPC = Game.Player.Character;
-                float distance = GPC.Position.DistanceTo(closestVehicle.Position);
+                float distance = Game.Player.Character.Position.DistanceTo(closestVehicle.Position);
                 bool vehicleClose = distance < interactionDistance;
                 bool facingVehicle = IsPlayerFacingVehicle(closestVehicle);
-                bool controlHeld = Game.IsControlPressed(Control.Aim);
 
                 if (facingVehicle && vehicleClose)
                 {
-                    if (controlHeld)
+                    if (Game.IsControlPressed(Control.Aim))
                     {
-                        if (GPC.Weapons.Current.LocalizedName == "Unarmed")
+                        if (Game.Player.Character.Weapons.Current.LocalizedName == "Unarmed")
                         {
                             ShowInteractionOptions(closestVehicle);
                         }
@@ -251,24 +235,7 @@ namespace AdvancedInteractionSystem
 
         }
 
-        public static void LeaveEngineRunning(Vehicle vehicle)
-        {
-            if (!vehicle.IsEngineRunning)
-            {
-                N.SetVehicleEngineOn(vehicle, true, true, false);
-            }
-        }
-
-        public static void DisableAutoStart(Vehicle vehicle)
-        {
-            if (vehicle.IsEngineRunning)
-            {
-                N.SetVehicleEngineOn(vehicle, false, true, false);
-            }
-        }
-
-
-
+        
         public static void HandleStudy(Vehicle vehicle)
         {
             try
@@ -462,106 +429,6 @@ namespace AdvancedInteractionSystem
                 AIS.LogException("InteractionHandler.HandleDoorInteraction", ex);
             }
         }
-
-        // TOGGLE IGNITION: 
-        private static readonly object toggleLock = new object();
-
-        public static void ToggleIgnition()
-        {
-            try
-            {
-                lock (toggleLock)
-                {
-                    if (LemonMenu.pool.AreAnyVisible) return;
-                    Vehicle currentVehicle = Game.Player.Character.CurrentVehicle;
-                    if (currentVehicle == null || toggleInProgress) return;
-
-                    toggleInProgress = true;
-
-                    bool engineRunning = currentVehicle.IsEngineRunning;
-                    float engineHealth = currentVehicle.EngineHealth;
-                    float engineTemp = currentVehicle.EngineTemperature;
-                    bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
-
-                    // if the engine is currently running we need to turn it off: 
-                    if (engineRunning)
-                    {
-                        // Disable Ignition: 
-                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, false, false, true);
-                        isEngineOff = true;
-                    }
-                    // engine is not running -> turn it on, as long as the engine is healthy: 
-                    else if (!engineRunning && engineHealth > 0f && isTempSafe)
-                    {
-                        // Enable Ignition: 
-                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
-                        isEngineOff = false;
-                    }
-                    if (handler_debugEnabled)
-                    {
-                        N.ShowSubtitle("Turning key in vehicle's ignition.", 1000);
-                    }
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                AIS.LogException("InteractionHandler.ToggleIgnition", ex);
-                isEngineOff = false;
-                isEngineOff = false;
-                toggleInProgress = false;
-            }
-            finally
-            {
-                toggleInProgress = false;
-            }
-        }
-        public static void HandleIgnition()
-        {
-            try
-            {
-                // If Control is Held
-                if (Game.IsControlPressed(ignitionControl))
-                {
-                    if (!ignitionHeld)
-                    {
-                        ignitionHeld = true;
-                        ignitionHeldStartTime = DateTime.Now;
-                    }
-                    else
-                    {
-                        double heldDuration = (DateTime.Now - ignitionHeldStartTime).TotalSeconds;
-                        if (heldDuration >= ignitionHoldDuration && !toggleInProgress)
-                        {
-                            // Toggle Ignition State: 
-                            ToggleIgnition();
-                            ignitionHeld = false;
-                        }
-                    }
-                }
-                else
-                {
-                    ignitionHeld = false;
-                    toggleInProgress = false;
-                }
-
-                if (SettingsManager.ignitionByThrottleEnabled)
-                {
-                    if (Game.IsControlPressed(Control.VehicleAccelerate) && isEngineOff)
-                    {
-                        N.SetVehicleEngineOn(Game.Player.Character.CurrentVehicle, true, false, true);
-                        isEngineOff = false;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                AIS.LogException("InteractionHandler.HandleIgnition", ex);
-                ignitionHeld = false;
-                isEngineOff = false;
-                toggleInProgress = false;
-            }
-        }
         
         public static void TyrePressureMonitoringSystem(Vehicle vehicle)
         {
@@ -602,10 +469,6 @@ namespace AdvancedInteractionSystem
                 if (tyreIssue)
                 {
                     Notification.Show(tyrePressure, false);
-                }
-                else
-                {
-                    Notification.Show("All Tyres are in perfect condition.", false);
                 }
             }
             catch (Exception ex)

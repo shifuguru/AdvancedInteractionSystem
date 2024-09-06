@@ -33,38 +33,58 @@ namespace AdvancedInteractionSystem
         public InteractionManager()
         {
             Tick += OnTick;
+            Aborted += OnAborted;
             Interval = 10;
             Function.Call(Hash.REQUEST_ANIM_DICT, "veh@std@ds@base");
+        }
+        private void OnAborted(object sender, EventArgs e)
+        {
+            CancelActions();
+        }
+
+        // Logic Inside Vehicle:
+        private void UpdateCurrentVehicle()
+        {
+            if (GPC.IsInVehicle())
+            {
+                currentVehicle = GPC.CurrentVehicle;
+            }
+        }
+
+        // Logic On Foot:
+        private void UpdateClosestVehicle()
+        {
+            if (GPC.IsOnFoot)
+            {
+                closestVehicle = World.GetClosestVehicle(GPC.Position, interactionDistance);
+            }
         }
 
         private void OnTick(object o, EventArgs e)
         {
             try
             {
+                // The Interaction Manager class manages the main Interaction methods.
+                // We update the Player's current and closest vehicle 
+                // Then pass to the Interaction Handler class
+
                 if (Game.IsLoading || Game.IsPaused || !SettingsManager.modEnabled)
                     return;
-                // modEnabled = SettingsManager.modEnabled;
-                bool debugEnabled = SettingsManager.debugEnabled;
                 
                 GPC = Game.Player.Character;
                 if (GPC == null) return;
- 
-                if (GPC.IsInVehicle())
+
+                UpdateCurrentVehicle();
+                UpdateClosestVehicle();
+
+                if (currentVehicle != null)
                 {
-                    currentVehicle = GPC.CurrentVehicle;
-                    IgnitionHandler.IVExit(GPC, currentVehicle, debugEnabled);
                     InteractionHandler.HandleInVehicle(currentVehicle);
                 }
-                if (GPC.IsOnFoot)
-                {
-                    currentVehicle = null;
-                    closestVehicle = World.GetClosestVehicle(GPC.Position, interactionDistance);
 
-                    if (closestVehicle != null)
-                    {
-                        InteractionHandler.HandleOnFoot(closestVehicle);
-                    }
-                    
+                if (closestVehicle != null)
+                {
+                    InteractionHandler.HandleOnFoot(closestVehicle);
                 }
             }
             catch (Exception ex)
@@ -78,12 +98,16 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                soundStopEvent.Set();
-                
+                if (soundStopEvent != null)
+                {
+                    soundStopEvent.Set();
+                }
+
                 // Clear animations
-                Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
-                Game.Player.Character.Task.ClearAnimation("timetable@maid@cleaning_surface@base", "base");
-                Game.Player.Character.Task.ClearAll();
+                if (Game.Player.Character != null)
+                {
+                    Game.Player.Character.Task.ClearAll();
+                }
 
                 if (Repairs.repairProp.Exists())
                 {
@@ -112,17 +136,26 @@ namespace AdvancedInteractionSystem
             try
             {
                 soundStopEvent.Set();
-                Game.Player.Character.Task.ClearAll();
+
+                if (Game.Player.Character != null)
+                {
+                    Game.Player.Character.Task.ClearAll();
+                }
 
                 if (Repairs.repairProp.Exists())
                 {
+                    Repairs.repairProp.Detach();
                     Repairs.repairProp.Delete();
+                    Repairs.repairProp = null;
                 }
 
                 if (Cleaning.cleaningProp.Exists())
                 {
+                    Cleaning.cleaningProp.Detach();
                     Cleaning.cleaningProp.Delete();
+                    Cleaning.cleaningProp = null;
                 }
+
                 Repairs.isRepairing = false;
                 Cleaning.cleaning = false;
             }
@@ -137,6 +170,7 @@ namespace AdvancedInteractionSystem
         {
             try
             {
+                Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Aim, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Attack, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Cover, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Sprint, true);

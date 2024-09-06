@@ -18,6 +18,7 @@ namespace AdvancedInteractionSystem
         public static bool modEnabled = SettingsManager.modEnabled;
         public static bool fuel_debugEnabled = SettingsManager.fuel_debugEnabled;
         public static bool fuelEnabled = SettingsManager.fuelEnabled;
+        public static Keys refuelKey = SettingsManager.refuelKey;
         public static bool isRefueling = false;
         public static Vehicle currentVehicle = InteractionManager.currentVehicle;
         public static Vehicle lastVehicle = null;
@@ -52,35 +53,15 @@ namespace AdvancedInteractionSystem
         };
         public static Vector3 closestGasStation = Vector3.Zero; // Furthest gas station
         public static float closestDistance = float.MaxValue;
+        public static float fuelPumpRadius = 10f;
         public static Blip fuelBlip;
         public static Blip closestBlip;
-        public static Blip currentFlashingBlip = null;
+        public static bool blipsAreFlashing = false;
+        // public static Blip currentFlashingBlip = null;
         public static List<Blip> fuelBlips = new List<Blip>();
-
+        
         public static Dictionary<string, float> carsList = new Dictionary<string, float>();
         public static Queue<string> licenseQueue = new Queue<string>();
-
-        public enum MaxTankMultiplier
-        {
-            Default = 65,
-            Boat = 3,
-            BoatBig = 8,
-            Commercial = 10,
-            Compact = 25,
-            Coupe = 30,
-            Emergency = 20,
-            Motorbike = 15,
-            Muscle = 27,
-            Helicopter = 6,
-            Aircraft = 2,
-            Offroad = 20,
-            Sedan = 30,
-            Sport = 35,
-            Classic = 15,
-            SUV = 30,
-            Utility = 20,
-            Super = 18,
-        }
 
 
         #region Vehicle: 
@@ -99,9 +80,9 @@ namespace AdvancedInteractionSystem
         public static int refillCost = 0;
         public static float initialFuel = 0f;
         public static float refilledFuel = 0f;
-        public static int refuelCost = 0;
+        // public static int refuelCost = 0;
         public static float maxFuel = 65000f; // Max Volume of Fuel Tank
-        public static float lowFuel = maxFuel * 0.25f; // 20% fuel: Low Fuel warning. 
+        public static float lowFuel = maxFuel * 0.25f; // 25% fuel: Low Fuel warning. 
         public static float minFuel = maxFuel * 0.10f; // 10% fuel: Reserve Tank warning.
         public static float currentFuel = 0f;
         public static float baseConsumption = 0f;
@@ -133,9 +114,9 @@ namespace AdvancedInteractionSystem
         #endregion
 
         #region UI: Warnings
-        public static DateTime lastWarningTime;
-        public static TimeSpan warningDuration = TimeSpan.FromMilliseconds(5000);
-        public static bool shouldWarn = false;
+        public static DateTime? lastWarningTime;
+        public static TimeSpan warningDuration = TimeSpan.FromMilliseconds(3000);
+        //public static bool shouldWarn = false;
         #endregion
         
         
@@ -145,76 +126,131 @@ namespace AdvancedInteractionSystem
             CreateGasStations();
             Tick += OnTick;
             Aborted += OnAborted;
-            // Interval = 1;
+            Interval = 1;
+        }
+
+
+        private static void DisplayFuelWarning(string message, float distance)
+        {
+            if (DateTime.Now - lastWarningTime < warningDuration)
+            {
+                // for icon I would prefer to use DIA_DRIVER but this requires texture streaming.. may revise later.. 
+                // N.DisplayNotificationSMS(NotificationIcon.Carsite, "Fuel Warning: ", "", message, false, false);
+            }
+        }
+
+        // needs revision, occurring per tick 
+        private static string GenerateWarningMessage()
+        {
+            double percentage = Math.Round((currentFuel / maxFuel * 100), 2, MidpointRounding.ToEven);
+
+            if (currentFuel <= 1f)
+            {
+                lastWarningTime = DateTime.Now;
+                fuelBar.Color = fuelBarColorWarning;
+                return "~r~Empty~s~";
+            }
+            else if (currentFuel <= minFuel)
+            {
+                lastWarningTime = DateTime.Now;
+                fuelBar.Color = fuelBarColorWarning;
+                return $"~r~{percentage}% remaining. Reserve tank in-use.~s~ ~n~~r~Fill up immediately or risk engine failure!~s~";
+            }
+            else
+            {
+                lastWarningTime = DateTime.Now;
+                fuelBar.Color = fuelBarColorWarning;
+                return $"~o~{percentage}% remaining~s~ ~n~Fill up at the nearest Gas Station";
+            }
+        }
+
+        private static void UpdateWaypointAlert()
+        {
+            bool waypointActive = Function.Call<bool>(Hash.IS_WAYPOINT_ACTIVE);
+            float distanceToWaypoint = World.GetDistance(closestGasStation, World.WaypointPosition);
+            bool isWaypointToClosestGasStation = waypointActive && distanceToWaypoint <= 15f;
+
+            if ((DateTime.Now - lastWarningTime) < warningDuration)
+            {
+                return;
+            }
+
+            if (isWaypointToClosestGasStation)
+            {
+                AIS.StopFlashingAllBlips(fuelBlips);
+                // lastWarningTime = null;
+                return;
+            }
+
+            if (closestBlip != null)
+            {
+                AIS.FlashBlip(closestBlip);
+            }
+            
+            N.ShowHelpText("Press ~INPUT_CONTEXT~ for directions to the closest Gas Station");
+
+            if (Game.IsControlJustPressed(Control.Context))
+            {
+                N.SetWaypoint(closestGasStation);
+            }
+
+            lastWarningTime = DateTime.Now;
+        }
+
+        public static void ManageEngineCeasure()
+        {
+            if (currentFuel <= 1f)
+            {
+                N.SetVehicleEngineOn(currentVehicle, false, false, true);
+            }
+        }
+
+        public static void UpdateFuelBarColor()
+        {
+            if (currentFuel < lowFuel)
+            {
+                fuelBar.Color = fuelBarColorWarning;
+            }
+            else
+            {
+                fuelBar.Color = fuelBarColorNormal;
+            }
         }
 
         public static void UpdateFuelWarning()
         {
             // Distance to gas station: 
             float distance = World.GetDistance(GPC.Position, closestGasStation);
-            string message = string.Empty;
-
-            // Display Fuel Warnings: 
-            if (currentFuel <= lowFuel && distance >= 5f)
+            
+            if (currentFuel > lowFuel || distance < 25f)
             {
-                if (currentFuel <= 1f)
-                {
-                    // 0% Fuel: Stop Vehicle & Prevent Engine turning on / Destroy engine - no smoke?: 
-                    if (currentVehicle.IsEngineRunning)
-                    {
-                        // Sputtering Logic: 
-                        N.SetVehicleEngineOn(currentVehicle, false, false, true);
-                    }
-                    message = "~r~Fuel Tank is empty.~s~ ~n~Use a ~y~jerry can~s~ to refuel the tank";
-                }
-                else if (currentFuel <= minFuel)
-                {
-                    // 10% Fuel Warning: 
-                    message = "~r~10% remaining~s~ Reserve tank in-use. ~n~~r~Fill up immediately or risk engine failure~s~";
-                    fuelBar.Color = fuelBarColorWarning;
-                }
-                else
-                {
-                    message = "~o~20% remaining~s~ ~n~Fill up at a nearby Gas Station";
-                    fuelBar.Color = fuelBarColorWarning;
-                }
-                // DIA_DRIVER
-
-                AIS.FlashBlip(closestBlip);
-                currentFlashingBlip = closestBlip;
-
-                lastWarningTime = DateTime.Now;
-            }
-            else
-            {
-                if (currentFlashingBlip != null)
-                {
-                    AIS.StopFlashingBlip(currentFlashingBlip);
-                    currentFlashingBlip = null;
-                }
+                AIS.StopFlashingAllBlips(fuelBlips);
+                return;
             }
 
-            bool shouldShowWarning = DateTime.Now - lastWarningTime < warningDuration;
+            // float percentage = (currentFuel / maxFuel) * 100f;
+            string message = GenerateWarningMessage();
+            
+            UpdateWaypointAlert();
+
+            // Display Fuel Warnings < 25%: 
+            if (currentVehicle.IsEngineRunning && currentFuel <= lowFuel)
+            {
+                // lastWarningTime = DateTime.Now;
+            }
+
+            bool shouldShowWarning = (DateTime.Now - lastWarningTime) >= warningDuration;
+
             if (shouldShowWarning)
             {
+                // DIA_DRIVER
+                // texture = Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, "DIA_DRIVER", false);
                 NotificationIcon icon = NotificationIcon.Carsite;
                 string sender = "Fuel Warning:";
                 string subject = "";
                 N.DisplayNotificationSMS(icon, sender, subject, message, false, false);
-                N.ShowHelpText("Press ~INPUT_CONTEXT~ to set a waypoint to the closest Gas Station");
-
-                if (Game.IsControlPressed(Control.Context))
-                {
-                    N.SetWaypoint(closestGasStation);
-                }
-            }
-            else
-            {
-                if (currentFlashingBlip != null)
-                {
-                    AIS.StopFlashingBlip(currentFlashingBlip);
-                    currentFlashingBlip = null;
-                }                
+                DisplayFuelWarning(message, distance);
+                lastWarningTime = DateTime.Now;
             }
         }
 
@@ -225,19 +261,33 @@ namespace AdvancedInteractionSystem
                 modEnabled = SettingsManager.modEnabled;
                 fuelEnabled = SettingsManager.fuelEnabled;
                 fuel_debugEnabled = SettingsManager.fuel_debugEnabled;
-                if (!modEnabled || !fuelEnabled) return;
-                GPC = Game.Player.Character;
-                if (GPC == null) return;
-                GetClosestGasStation();
-                isInVehicle = GPC.IsInVehicle();
-                currentVehicle = Game.Player.Character.CurrentVehicle;
-                if (currentVehicle == null) return;
-                UpdateFuelForCurrentVehicle(currentVehicle);
 
+                if (!modEnabled || !fuelEnabled) return;
+
+                GPC = Game.Player.Character;
+                if (GPC == null || !GPC.Exists() || GPC.IsDead) return;
+
+                isInVehicle = GPC.IsInVehicle();
+
+                currentVehicle = Game.Player.Character.CurrentVehicle;
+                if (currentVehicle == null 
+                    || !currentVehicle.Exists() 
+                    || currentVehicle.IsBicycle 
+                    || currentVehicle.HighGear <= 1 
+                    || currentVehicle.IsBoat 
+                    || currentVehicle.IsAircraft) 
+                    return;
+
+                GetClosestGasStation();
+
+                UpdateFuelForCurrentVehicle(currentVehicle);
+                
+                UpdateFuelBarColor();
                 UpdateFuelWarning();
-                
-                
-                // Get Fuel for all vehicles in Cars List
+
+                PumpLogic(currentVehicle);
+                ManageEngineCeasure();
+                // Get Fuel for all vehicles
             }
             catch (Exception ex)
             {
@@ -258,17 +308,16 @@ namespace AdvancedInteractionSystem
         public static void GetClosestGasStation()
         {
             Vector3 playerPosition = Game.Player.Character.Position;
-            float closestDistance = float.MaxValue;
+            closestDistance = float.MaxValue;
 
             foreach (Blip blip in fuelBlips)
             {
-                Vector3 position = blip.Position;
                 float distance = Vector3.Distance(playerPosition, blip.Position);
 
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
-                    closestGasStation = position;
+                    closestGasStation = blip.Position;
                     closestBlip = blip;
                 }
             }
@@ -385,6 +434,7 @@ namespace AdvancedInteractionSystem
             float throttle = vehicle.Throttle;
             float acceleration = Math.Max(0, vehicle.Acceleration);
             float speedKph = Math.Abs(vehicle.Speed * 3.6f);
+
             // Engine Temperature / efficiency
             float engineTemp = (float)Math.Round(currentVehicle.EngineTemperature, 1);
             float tempFactor = engineTemp < 40 ? 1.5f : 1.0f; // Adjust factor based on engine temperature.
@@ -411,13 +461,13 @@ namespace AdvancedInteractionSystem
             // float tractionMax = vehicle.HandlingData.TractionCurveMax;
 
             // FUEL CONSUMPTION RATE FORMULA: 
-            float fuelConsumptionRate =
+            float consumptionRate =
                 engineState // 1
                 * baseConsumption // 700 
                 * rpm // 0.2
                 * (acceleration + rpm) 
                 * (speedKph / 100f + rpm)
-                * engineTemp
+                * tempFactor
                 / engineHealth;
 
             // float lPerKm = (currentFuel / 1000f) / totalDistancedTravelled;
@@ -425,12 +475,12 @@ namespace AdvancedInteractionSystem
 
             // float fuelConsumptionRate = baseConsumption * (throttle * acceleration * rpm / engHealth) * (speed + minSpeed) * roadFrictionMultiplier * environmentalMultiplier * behaviouralMultiplier * vehicleSpecsMultiplier;
 
-            string textColor = fuelConsumptionRate >= 1f ? "~r~" : "~w~";
+            string textColor = consumptionRate >= 1f ? "~r~" : "~w~";
 
             if (fuel_debugEnabled)
             {
                 N.ShowSubtitle(
-                $"Fuel = ~y~{Math.Round(liters, 4)} Liters~s~ Rate: ~p~{Math.Round(fuelConsumptionRate, 3)}~s~ "
+                $"Fuel = ~y~{Math.Round(liters, 4)} Liters~s~ Rate: ~p~{Math.Round(consumptionRate, 3)}~s~ "
                 + $"~n~Acceleration: ~r~{Math.Round(acceleration, 2)}~s~ Idle: ~r~{rpm}~s~ "
                 + $"~n~Speed: ~y~{speedKph}~s~ Health: ~g~{engineHealth}~s~ "
                 + $"~n~Temp: ~o~{engineTemp}C~s~ Factor: ~o~{tempFactor}~s~ "
@@ -485,7 +535,7 @@ namespace AdvancedInteractionSystem
             // Once you have the distance traveled and the fuel consumed, you can use the appropriate units to calculate Liters per Kilometer.
             */
                 
-            return fuelConsumptionRate;
+            return consumptionRate;
         }
 
         public static void UpdateFuel(string carName, float newFuel)
@@ -498,59 +548,57 @@ namespace AdvancedInteractionSystem
 
         public static void PumpLogic(Vehicle vehicle)
         {
-            bool nearPump = IsVehicleNearAnyPump(vehicle);
+            if (!IsVehicleNearAnyPump(vehicle)) return;
 
-            if (nearPump)
+            if (currentFuel >= maxFuel || !vehicle.IsOnAllWheels || !vehicle.IsStopped || vehicle.IsUpsideDown || vehicle.IsDead)
             {
-                if (currentFuel < maxFuel)
+                // Tell the player to right their vehicle? 
+                // N.ShowHelpText("");
+                if (isRefueling)
                 {
-                    float fuelToFill = (maxFuel - currentFuel) / 1000;
-                    int refuelCost = (int)Math.Round(fuelPrice * fuelToFill, 1, MidpointRounding.AwayFromZero);
+                    isRefueling = false;
+                    FinishedRefueling();
+                }
+                return;
+            }
 
-                    if (vehicle.IsEngineRunning)
-                    {
-                        // isRefueling = false;
-                        N.ShowHelpText("Fueling Safety Notice: Hold ~INPUT_CONTEXT~ to turn Engine off.");
-                    }
-                    else
-                    {
-                        if (Game.IsControlPressed(Control.VehicleHandbrake))
-                        {
-                            if (!isRefueling)
-                            {
-                                isRefueling = true;
-                                initialFuel = currentFuel;
-                            }
-                            if (isRefueling)
-                            {
-                                Refuel();
-                                float fuelFilled = (currentFuel - initialFuel) / 1000;
-                                int fuelFilledCost = (int)Math.Round(fuelPrice * fuelFilled, 1, MidpointRounding.AwayFromZero);
-                                N.ShowHelpText($"Hold ~INPUT_VEH_HANDBRAKE~ to refuel. ~n~Price per liter: ~g~${fuelPrice}~s~ ~n~Refill Cost: ~g~${fuelFilledCost}~s~.");
-                            }
-                        }
-                        if (Game.IsControlJustReleased(Control.VehicleHandbrake))
-                        {
-                            if (isRefueling)
-                            {
-                                isRefueling = false;
-                                FinishedRefueling();
-                            }
-                        }
-                        if (!isRefueling)
-                        {
-                            N.ShowHelpText($"Hold ~INPUT_VEH_HANDBRAKE~ to refuel. ~n~Price per litre: ~g~${fuelPrice}~s~ ~n~Current Refill Cost: ~g~${refuelCost}~s~.");
-                        }
-                    }
-                }
-                if (currentFuel == maxFuel)
+            if (vehicle.IsEngineRunning)
+            {
+                isRefueling = false;
+                N.ShowHelpText("Hold ~INPUT_CONTEXT~ to turn Engine off before refueling");
+                return;
+            }
+
+            float fuelToFill = (maxFuel - currentFuel) / 1000;
+            int totalCostToFill = (int)Math.Round(fuelPrice * fuelToFill, 1, MidpointRounding.AwayFromZero);
+            string message = $"Hold ~INPUT_VEH_HANDBRAKE~ to refuel ~n~Price per liter: ~g~${fuelPrice}~s~";
+
+            if (Game.IsControlPressed(Control.VehicleHandbrake))
+            {
+                if (!isRefueling)
                 {
-                    if (isRefueling)
-                    {
-                        isRefueling = false;
-                        FinishedRefueling();
-                    }
+                    isRefueling = true;
+                    initialFuel = currentFuel;
                 }
+                if (isRefueling)
+                {
+                    Refuel();
+                    float fuelFilled = (currentFuel - initialFuel) / 1000;
+                    int fuelFilledCost = (int)Math.Round(fuelPrice * fuelFilled, 1, MidpointRounding.AwayFromZero);
+                    N.ShowHelpText($"{message} ~n~Total: ~g~${fuelFilledCost}~s~");
+                }
+            }
+            if (Game.IsControlJustReleased(Control.VehicleHandbrake))
+            {
+                if (isRefueling)
+                {
+                    isRefueling = false;
+                    FinishedRefueling();
+                }
+            }
+            if (!isRefueling)
+            {
+                N.ShowHelpText($"{message} ~n~Total to fill: ~g~${totalCostToFill}~s~.");
             }
         }
         public static void Refuel()
@@ -570,7 +618,7 @@ namespace AdvancedInteractionSystem
             if (Game.Player.Money < refillCost)
             {
                 Game.Player.WantedLevel += 1;
-                N.DisplayNotification($"~r~You were caught stealing~s~. ~n~Police have a description of your appearance.", false);
+                N.DisplayNotification($"~r~You were caught stealing gas~s~ ~n~Police are enroute to your location", false);
             }
             DeductMoney(refillCost);
             fuelRefilled = 0f;
@@ -604,7 +652,7 @@ namespace AdvancedInteractionSystem
             {
                 for (int index = 0; index < gasStations.Length; ++index)
                 {
-                    if (Game.Player.Character.Position.DistanceTo2D(gasStations[index]) <= 12.0)
+                    if (Game.Player.Character.Position.DistanceTo2D(gasStations[index]) <= fuelPumpRadius)
                     {
                         return true;
                     }
@@ -666,34 +714,20 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (isInVehicle && currentVehicle != null)
+                string license = currentVehicle.Mods.LicensePlate;
+                if (license != null)
                 {
-                    if (!currentVehicle.IsBicycle || currentVehicle.HighGear >= 1 || currentVehicle.IsBoat || currentVehicle.IsAircraft)
+                    if (!CompareLicense(license))
                     {
-                        
-                        string license = currentVehicle.Mods.LicensePlate;
-                        if (license != null)
-                        {
-                            if (!CompareLicense(license))
-                            {
-                                
-                                // Re-initialize Fuel System for new vehicle: 
-                                InitializeFuelSystem(currentVehicle);
-                            }
-
-                            float consumptionRate = CalculateFuelConsumptionRate(currentVehicle);
-                            currentFuel = Math.Max(currentFuel - (consumptionRate * Game.LastFrameTime), 0);
-                            lowFuel = maxFuel * 0.2f;
-
-                            if (!isEngineDestroyed)
-                            {
-                                PumpLogic(currentVehicle);
-                            }
-
-                            UpdateFuel(currentVehicle.Mods.LicensePlate, currentFuel);
-                            RenderFuelBar(currentFuel, maxFuel, false);
-                        }
+                        // Re-initialize Fuel System for new vehicle: 
+                        InitializeFuelSystem(currentVehicle);
                     }
+
+                    float consumptionRate = CalculateFuelConsumptionRate(currentVehicle);
+                    currentFuel = Math.Max(currentFuel - (consumptionRate * Game.LastFrameTime), 0);
+
+                    UpdateFuel(currentVehicle.Mods.LicensePlate, currentFuel);
+                    RenderFuelBar(currentFuel, maxFuel, false);
                 }
             }
             catch (Exception ex)
