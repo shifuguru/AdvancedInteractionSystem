@@ -1,17 +1,14 @@
 ﻿using System;
 using System.IO;
 using GTA;
-using GTA.Native;
 using GTA.Math;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Threading;
-using System.Linq;
 
 namespace AdvancedInteractionSystem
 {
     public class AIS : Script
     {
+        
         public static string log = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AIS", "AIS.log");
         // Settings: 
         public static string modName = "Advanced Interaction System";
@@ -80,11 +77,26 @@ namespace AdvancedInteractionSystem
             }
             return weatherCondition;
         }
+        
+        public static void AttachBlip(Entity entity, BlipSprite sprite, float scale, BlipColor color, string blipName, List<Blip> blips)
+        {
+            if (entity == null || blips == null) return;
+            Blip blip = entity.AddBlip();
+            if (blip == null) return;
+            blip.Sprite = sprite;
+            blip.Scale = scale;
+            blip.Color = color;
+            blip.Name = blipName;
+            blip.IsShortRange = SettingsManager.shortRangeBlips;
+            blips.Add(blip);
+        }
+
 
         public static void CreateBlip(Vector3 position, BlipSprite sprite, float scale, BlipColor color, string blipName, List<Blip> blips)
         {
             if (position == null || blips == null) return;
             Blip blip = World.CreateBlip(position);
+
             if (blip == null) return;
             blip.Sprite = sprite;
             blip.Scale = scale;
@@ -136,6 +148,12 @@ namespace AdvancedInteractionSystem
         {
             SettingsManager.LoadSettings();
         }
+
+        public static void LogDebug(string msg)
+        {
+            Console.WriteLine($"{msg}");
+        }
+
 
         // EXCEPTION LOGGING: 
         public static void LogException(string methodName, Exception ex)

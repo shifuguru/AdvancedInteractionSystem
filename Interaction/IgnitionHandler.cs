@@ -1,77 +1,97 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Windows.Forms;
-using LemonUI;
-using LemonUI.Menus;
-using iFruitAddon2;
 using GTA;
 using GTA.UI;
 using GTA.Math;
 using GTA.Native;
 using Control = GTA.Control;
-using Screen = GTA.UI.Screen;
-using System.Threading;
 
 namespace AdvancedInteractionSystem
 {
     public class IgnitionHandler : Script
     {
+        public static bool closeDoorOnExit = true;
+        // public static bool disableAutoStart = SettingsManager.disableAutoStart;
+        public static Control ignitionControl = Control.VehicleHeadlight;
+
+
         public static bool ignitionHeld; // READONLY
-        public static bool engineToggled; // READONLY
+        public const float ignitionHoldDuration = 2.5f; // Time ignition conrol must be held for, in seconds
         public static DateTime ignitionHeldStartTime; // READONLY
-        public const float ignitionHoldDuration = 2.5f;
-        public static Control ignitionControl = Control.Context;
-        public static int exitHeldTime;
-        public static bool toggleInProgress;
-        public static bool bypass;
+                
+        public static int exitHeldTime = 0; // time exit button is held for
+        public static int engineDelayTime = 0; // time delay of engine shutting off after holding Exit
+        public static int exitDelayTime = 0; // time before exiting the vehicle
+        public static int ignitionCooldown = 0; // time before ignition can be toggled again 
+
+        public static bool toggleInProgress = false; 
+        public static bool keepEngineRunning = false; // previously named 'bypass'. 
+        public static bool eng = false;
+        public static int enforce = 0;
+        public static int delay = 0;
+        public static int rest = 0;
+        public static bool isPlayerDriving = false; 
 
         // IGNTION CONTROL: 
+        public static void DisableAutoStart()
+        {
+            if (SettingsManager.disableAutoStart)
+            {
+                Vehicle vehicle = Function.Call<Vehicle>(Hash.GET_VEHICLE_PED_IS_TRYING_TO_ENTER, Game.Player.Character);
+                if (vehicle != null && vehicle.Exists())
+                {
+                    N.SetVehicleEngineOn(vehicle, vehicle.IsEngineRunning, false, SettingsManager.disableAutoStart);
+                }
+            }
+        }
 
         public static void IVExit(Vehicle vehicle)
         {
+            if (!SettingsManager.IVExit) return;
+
             try
             {
-                if (vehicle == null || !vehicle.Exists())
-                {
-                    exitHeldTime = 0;
-                    return;
-                }
+                isPlayerDriving = vehicle != null && vehicle.GetPedOnSeat(VehicleSeat.Driver) == Game.Player.Character;
 
-                if (vehicle.GetPedOnSeat(VehicleSeat.Driver) == Game.Player.Character)
+                if (isPlayerDriving)
                 {
                     bool exitHeld = Game.IsControlPressed(Control.VehicleExit);
 
-                    if (bypass || exitHeld && vehicle.LockStatus.Equals(1))
+                    if (keepEngineRunning || exitHeld && vehicle.LockStatus.Equals(1))
                     {
+                        // Reset the Exit Held Time
                         if (!exitHeld)
                         {
-                            Game.Player.Character.Task.LeaveVehicle();
+                            Game.Player.Character.Task.LeaveVehicle(vehicle, true);
                         }
+
                         ++exitHeldTime;
-                        // Game.Player.Character.Task.LeaveVehicle(vehicle, true);
+
                         if (exitHeldTime < 11)
                         {
-                            bypass = true;
+                            keepEngineRunning = true;
                             vehicle.IsEngineRunning = true;
-                            // LeaveEngineRunning(vehicle);
                             return;
                         }
+
                         if (exitHeldTime < 211) return;
+
                         vehicle.IsEngineRunning = !exitHeld;
+
                         if (exitHeldTime < 1211 && !vehicle.IsEngineRunning) return;
+
                         vehicle.IsEngineRunning = false;
                     }
                 }
-                bypass = false;
+
+                keepEngineRunning = false;
                 exitHeldTime = 0;
+                rest = 0;
+                delay = 0;
+                enforce = 0;
             }
             catch (Exception ex)
             {
                 AIS.LogException("IgnitionHandler.IVExit", ex);
-                engineToggled = false;
             }
         }
         public static void ToggleIgnition(Vehicle vehicle)
@@ -87,22 +107,16 @@ namespace AdvancedInteractionSystem
                 float engineTemp = vehicle.EngineTemperature;
                 bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
 
+                bool isEngineOn = vehicle.IsEngineRunning;
+
+                Game.Player.Character.Task.PlayAnimation("veh@std@ds@base", "start_engine", 0, 0, 0, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 1);
+                N.SetVehicleEngineOn(vehicle, !isEngineOn, false, SettingsManager.disableAutoStart);
+
+
                 // TURN ENGINE OFF: 
                 if (vehicle.IsEngineRunning)
                 {
-                    Game.Player.Character.Task.PlayAnimation("veh@std@ds@base", "start_engine", 0, 0, 0, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 1);
-                    N.SetVehicleEngineOn(vehicle, false, false, true);
-                }
-                // TURN ENGINE ON: 
-                else if (!vehicle.IsEngineRunning)
-                {
-                    Game.Player.Character.Task.PlayAnimation("veh@std@ds@base", "start_engine", 0, 0, 0, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 1);
                     IgnitionStartupChecks(vehicle);
-                    N.SetVehicleEngineOn(vehicle, true, false, true);
-                }
-                if (SettingsManager.ignition_debugEnabled)
-                {
-                    N.ShowSubtitle("Turning key in vehicle's ignition.", 1000);
                 }
             }
             catch (Exception ex)

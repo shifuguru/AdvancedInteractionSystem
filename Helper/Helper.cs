@@ -1,13 +1,5 @@
 ﻿using GTA;
-using GTA.Math;
-using GTA.Native;
-// using Metadata;
-// using Microsoft.VisualBasic.CompilerServices;
-using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
 
 namespace AdvancedInteractionSystem
 {

@@ -10,6 +10,8 @@ H:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInterac
 H:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\Advanced.5D6822AB.Up2Date
 H:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.dll
 H:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.pdb
+F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.csproj.AssemblyReference.cache
+F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.csproj.CoreCompileInputs.cache
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\AdvancedInteractionSystem.dll
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\AdvancedInteractionSystem.pdb
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\iFruitAddon2.dll
@@ -17,8 +19,6 @@ F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\LemonUI.SHVDN3.
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\ScriptHookVDotNet3.dll
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\LemonUI.SHVDN3.xml
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\ScriptHookVDotNet3.xml
-F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.csproj.AssemblyReference.cache
-F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.csproj.CoreCompileInputs.cache
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\Advanced.5D6822AB.Up2Date
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.dll
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.pdb

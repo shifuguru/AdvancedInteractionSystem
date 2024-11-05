@@ -15,14 +15,14 @@ namespace AdvancedInteractionSystem
 {
     public class Fuel : Script
     {
-        public static bool modEnabled = SettingsManager.modEnabled;
-        public static bool fuel_debugEnabled = SettingsManager.fuel_debugEnabled;
-        public static bool fuelEnabled = SettingsManager.fuelEnabled;
+        private GasStationManager gasStationManager;
+        private FuelConsumptionManager fuelConsumptionManager;
+        private FuelWarningManager fuelWarningManager;
+        private EngineManager engineManager;
+        private RefuelManager refuelManager;
+
         public static Keys refuelKey = SettingsManager.refuelKey;
         public static bool isRefueling = false;
-        public static Vehicle currentVehicle = InteractionManager.currentVehicle;
-        public static Vehicle lastVehicle = null;
-        public static Ped GPC = Game.Player.Character;
 
         public static Vector3[] gasStations = new Vector3[24]
         {
@@ -65,9 +65,6 @@ namespace AdvancedInteractionSystem
 
 
         #region Vehicle: 
-        public static bool isInVehicle = false;
-        public static bool isEngineRunning = false;
-        public static bool isEngineDestroyed = false;
         public static Vector3 initialPosition;
         public static float tripOdometer = 0f;
         public static Vector3 currentPosition;
@@ -122,14 +119,59 @@ namespace AdvancedInteractionSystem
         
         public Fuel()
         {
-            // string textureDict, string textureName, SizeF size, PointF position
-            CreateGasStations();
+            gasStationManager = new GasStationManager();
+            fuelConsumptionManager = new FuelConsumptionManager();
+            fuelWarningManager = new FuelWarningManager();
+            engineManager = new EngineManager();
+            refuelManager = new RefuelManager();
+
+            gasStationManager.CreateGasStations();
+
             Tick += OnTick;
             Aborted += OnAborted;
             Interval = 1;
         }
 
 
+
+        // FUEL NOTIFICATIONS: 
+
+        public static void UpdateFuelWarning()
+        {
+            // Distance to gas station: 
+            float distance = World.GetDistance(Game.Player.Character.Position, closestGasStation);
+
+            if (currentFuel > lowFuel || distance < 25f)
+            {
+                AIS.StopFlashingAllBlips(fuelBlips);
+                return;
+            }
+
+            // float percentage = (currentFuel / maxFuel) * 100f;
+            string message = GenerateWarningMessage();
+
+            UpdateWaypointAlert();
+
+            // Display Fuel Warnings < 25%: 
+            if (InteractionManager.currentVehicle.IsEngineRunning && currentFuel <= lowFuel)
+            {
+                // lastWarningTime = DateTime.Now;
+            }
+
+            bool shouldShowWarning = (DateTime.Now - lastWarningTime) >= warningDuration;
+
+            if (shouldShowWarning)
+            {
+                // DIA_DRIVER
+                // texture = Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, "DIA_DRIVER", false);
+                NotificationIcon icon = NotificationIcon.Carsite;
+                string sender = "Fuel Warning:";
+                string subject = "";
+                N.DisplayNotificationSMS(icon, sender, subject, message, false, false);
+                DisplayFuelWarning(message, distance);
+                lastWarningTime = DateTime.Now;
+            }
+        }
         private static void DisplayFuelWarning(string message, float distance)
         {
             if (DateTime.Now - lastWarningTime < warningDuration)
@@ -138,8 +180,6 @@ namespace AdvancedInteractionSystem
                 // N.DisplayNotificationSMS(NotificationIcon.Carsite, "Fuel Warning: ", "", message, false, false);
             }
         }
-
-        // needs revision, occurring per tick 
         private static string GenerateWarningMessage()
         {
             double percentage = Math.Round((currentFuel / maxFuel * 100), 2, MidpointRounding.ToEven);
@@ -164,6 +204,8 @@ namespace AdvancedInteractionSystem
             }
         }
 
+
+        // WAYPOINT NOTIFICATION:
         private static void UpdateWaypointAlert()
         {
             bool waypointActive = Function.Call<bool>(Hash.IS_WAYPOINT_ACTIVE);
@@ -197,14 +239,19 @@ namespace AdvancedInteractionSystem
             lastWarningTime = DateTime.Now;
         }
 
+
+        // ENGINE MANAGER: 
         public static void ManageEngineCeasure()
         {
             if (currentFuel <= 1f)
             {
-                N.SetVehicleEngineOn(currentVehicle, false, false, true);
+                N.SetVehicleEngineOn(InteractionManager.currentVehicle, false, false, true);
             }
         }
 
+
+
+        // FUEL BAR: 
         public static void UpdateFuelBarColor()
         {
             if (currentFuel < lowFuel)
@@ -216,113 +263,6 @@ namespace AdvancedInteractionSystem
                 fuelBar.Color = fuelBarColorNormal;
             }
         }
-
-        public static void UpdateFuelWarning()
-        {
-            // Distance to gas station: 
-            float distance = World.GetDistance(GPC.Position, closestGasStation);
-            
-            if (currentFuel > lowFuel || distance < 25f)
-            {
-                AIS.StopFlashingAllBlips(fuelBlips);
-                return;
-            }
-
-            // float percentage = (currentFuel / maxFuel) * 100f;
-            string message = GenerateWarningMessage();
-            
-            UpdateWaypointAlert();
-
-            // Display Fuel Warnings < 25%: 
-            if (currentVehicle.IsEngineRunning && currentFuel <= lowFuel)
-            {
-                // lastWarningTime = DateTime.Now;
-            }
-
-            bool shouldShowWarning = (DateTime.Now - lastWarningTime) >= warningDuration;
-
-            if (shouldShowWarning)
-            {
-                // DIA_DRIVER
-                // texture = Function.Call(Hash.REQUEST_STREAMED_TEXTURE_DICT, "DIA_DRIVER", false);
-                NotificationIcon icon = NotificationIcon.Carsite;
-                string sender = "Fuel Warning:";
-                string subject = "";
-                N.DisplayNotificationSMS(icon, sender, subject, message, false, false);
-                DisplayFuelWarning(message, distance);
-                lastWarningTime = DateTime.Now;
-            }
-        }
-
-        public static void OnTick(object sender, EventArgs e)
-        {
-            try
-            {
-                modEnabled = SettingsManager.modEnabled;
-                fuelEnabled = SettingsManager.fuelEnabled;
-                fuel_debugEnabled = SettingsManager.fuel_debugEnabled;
-
-                if (!modEnabled || !fuelEnabled) return;
-
-                GPC = Game.Player.Character;
-                if (GPC == null || !GPC.Exists() || GPC.IsDead) return;
-
-                isInVehicle = GPC.IsInVehicle();
-
-                currentVehicle = Game.Player.Character.CurrentVehicle;
-                if (currentVehicle == null 
-                    || !currentVehicle.Exists() 
-                    || currentVehicle.IsBicycle 
-                    || currentVehicle.HighGear <= 1 
-                    || currentVehicle.IsBoat 
-                    || currentVehicle.IsAircraft) 
-                    return;
-
-                GetClosestGasStation();
-
-                UpdateFuelForCurrentVehicle(currentVehicle);
-                
-                UpdateFuelBarColor();
-                UpdateFuelWarning();
-
-                PumpLogic(currentVehicle);
-                ManageEngineCeasure();
-                // Get Fuel for all vehicles
-            }
-            catch (Exception ex)
-            {
-                AIS.LogException("Fuel.OnTick", ex);
-            }
-        }
-
-        public static void CreateGasStations()
-        {
-            Function.Call(Hash.REQUEST_ANIM_DICT, "weapon@w_sp_jerrycan");
-
-            // CREATE GAS STATION BLIPS: 
-            for (int index = 0; index < gasStations.Length; ++index)
-            {
-                AIS.CreateBlip(gasStations[index], (BlipSprite)361, 0.6f, BlipColor.White, "Gas Station", fuelBlips);
-            }
-        }
-        public static void GetClosestGasStation()
-        {
-            Vector3 playerPosition = Game.Player.Character.Position;
-            closestDistance = float.MaxValue;
-
-            foreach (Blip blip in fuelBlips)
-            {
-                float distance = Vector3.Distance(playerPosition, blip.Position);
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestGasStation = blip.Position;
-                    closestBlip = blip;
-                }
-            }
-        }
-
         // Fuel Bar: 
         public static float GetBarWidth()
         {
@@ -376,6 +316,76 @@ namespace AdvancedInteractionSystem
             fuelBar.Draw();
         }
 
+
+
+
+        public static void OnTick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!SettingsManager.modEnabled || !SettingsManager.fuelEnabled) return;
+
+                Ped GPC = Game.Player.Character;
+                if (GPC == null || !GPC.Exists() || GPC.IsDead) return;
+
+                Vehicle currentVehicle = InteractionManager.currentVehicle;
+                if (currentVehicle == null 
+                    || !currentVehicle.Exists() 
+                    || currentVehicle.IsBicycle 
+                    || currentVehicle.HighGear <= 1 
+                    || currentVehicle.IsBoat 
+                    || currentVehicle.IsAircraft) 
+                    return;
+
+                GetClosestGasStation();
+
+                UpdateFuelForCurrentVehicle(currentVehicle);
+                
+                UpdateFuelBarColor();
+                UpdateFuelWarning();
+
+                PumpLogic(currentVehicle);
+                ManageEngineCeasure();
+                // Get Fuel for all vehicles
+            }
+            catch (Exception ex)
+            {
+                AIS.LogException("Fuel.OnTick", ex);
+            }
+        }
+
+        public static void CreateGasStations()
+        {
+            Function.Call(Hash.REQUEST_ANIM_DICT, "weapon@w_sp_jerrycan");
+
+            // CREATE GAS STATION BLIPS: 
+            for (int index = 0; index < gasStations.Length; ++index)
+            {
+                AIS.CreateBlip(gasStations[index], (BlipSprite)361, 0.6f, BlipColor.White, "Gas Station", fuelBlips);
+            }
+        }
+        
+        
+        
+        public static void GetClosestGasStation()
+        {
+            Vector3 playerPosition = Game.Player.Character.Position;
+            closestDistance = float.MaxValue;
+
+            foreach (Blip blip in fuelBlips)
+            {
+                float distance = Vector3.Distance(playerPosition, blip.Position);
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestGasStation = blip.Position;
+                    closestBlip = blip;
+                }
+            }
+        }
+
+        
         // Fuel System: 
         public static void InitializeFuelSystem(Vehicle vehicle)
         {
@@ -387,7 +397,7 @@ namespace AdvancedInteractionSystem
             AddCar(license, initialFuel);
             currentFuel = initialFuel;
 
-            if (fuel_debugEnabled)
+            if (SettingsManager.fuel_debugEnabled)
             {
                 N.ShowSubtitle($"Car Added: ~b~{vehicle.LocalizedName}~s~, Plate: {vehicle.Mods.LicensePlate}, Fuel: ~y~{currentFuel}~s~ Liters", 2500);
             }
@@ -436,7 +446,7 @@ namespace AdvancedInteractionSystem
             float speedKph = Math.Abs(vehicle.Speed * 3.6f);
 
             // Engine Temperature / efficiency
-            float engineTemp = (float)Math.Round(currentVehicle.EngineTemperature, 1);
+            float engineTemp = (float)Math.Round(InteractionManager.currentVehicle.EngineTemperature, 1);
             float tempFactor = engineTemp < 40 ? 1.5f : 1.0f; // Adjust factor based on engine temperature.
 
             // BASE CONSUMPTION.
@@ -477,7 +487,7 @@ namespace AdvancedInteractionSystem
 
             string textColor = consumptionRate >= 1f ? "~r~" : "~w~";
 
-            if (fuel_debugEnabled)
+            if (SettingsManager.fuel_debugEnabled)
             {
                 N.ShowSubtitle(
                 $"Fuel = ~y~{Math.Round(liters, 4)} Liters~s~ Rate: ~p~{Math.Round(consumptionRate, 3)}~s~ "
@@ -546,6 +556,8 @@ namespace AdvancedInteractionSystem
             }
         }
 
+
+        // PUMP MANAGER:
         public static void PumpLogic(Vehicle vehicle)
         {
             if (!IsVehicleNearAnyPump(vehicle)) return;

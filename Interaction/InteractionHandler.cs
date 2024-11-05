@@ -4,10 +4,7 @@ using GTA.UI;
 using GTA.Math;
 using GTA.Native;
 using Control = GTA.Control;
-using Screen = GTA.UI.Screen;
-using LemonUI;
-using System.Threading;
-using LemonUI.Elements;
+using GSH = AdvancedInteractionSystem.RefuelHelper;
 
 namespace AdvancedInteractionSystem
 {
@@ -25,7 +22,6 @@ namespace AdvancedInteractionSystem
         public static float interactionDistance = 8f;
         public static DateTime ignitionHeldStartTime; // READONLY
         public static bool ignitionHeld; // READONLY
-        public static bool engineRunning = false;
         public static bool toggleInProgress = false;
         public static float ignitionHoldDuration = 1.5f;
         // handle locked vehicle: 
@@ -47,18 +43,12 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (currentVehicle == null || !currentVehicle.Exists() || currentVehicle.IsDead)
-                {
-                    engineRunning = false;
-                    return;
-                }
-                
-                IgnitionHandler.IVExit(currentVehicle);
-                engineRunning = currentVehicle.IsEngineRunning;
+                if (currentVehicle == null || !currentVehicle.Exists()) return;
+
                 float engineHealth = currentVehicle.EngineHealth;
                 double engineTemp = Math.Round(currentVehicle.EngineTemperature, 1);
                 bool isTempSafe = engineTemp >= 5f && engineTemp <= 110f;
-                bool isRefueling = Fuel.isRefueling;
+                bool isRefueling = GSH.isRefueling;
 
                 if (!isRefueling)
                 {
@@ -76,6 +66,7 @@ namespace AdvancedInteractionSystem
             try
             {
                 if (closestVehicle == null || !closestVehicle.Exists()) return;
+                InteractionManager.currentVehicle = null;
 
                 float distance = Game.Player.Character.Position.DistanceTo(closestVehicle.Position);
                 bool vehicleClose = distance < interactionDistance;
@@ -83,18 +74,17 @@ namespace AdvancedInteractionSystem
 
                 if (facingVehicle && vehicleClose)
                 {
+                    if (Game.Player.Character.Weapons.Current.LocalizedName == "Jerry Can") return;
+                    
                     if (Game.IsControlPressed(Control.Aim))
                     {
                         if (Game.Player.Character.Weapons.Current.LocalizedName == "Unarmed")
                         {
                             ShowInteractionOptions(closestVehicle);
                         }
-                        else
+                        else if (SettingsManager.debugEnabled)
                         {
-                            if (SettingsManager.debugEnabled)
-                            {
-                                N.ShowSubtitle("Stow your weapon to interact with this vehicle", 200);
-                            }
+                            N.ShowSubtitle("Stow your weapon to interact with this vehicle", 200);
                         }
                     }
                 }
@@ -102,7 +92,7 @@ namespace AdvancedInteractionSystem
                 {
                     if (Repairs.isRepairing || Cleaning.cleaning)
                     {
-                        InteractionManager.CancelActions();
+                        InteractionManager.CompleteActions();
                     }
                 }
             }
@@ -264,11 +254,6 @@ namespace AdvancedInteractionSystem
                     false
                     );
                 }
-
-
-
-                
-
             }
             catch (Exception ex)
             {
@@ -374,43 +359,49 @@ namespace AdvancedInteractionSystem
                 return string.Empty;
             }
         }
+        
+        public static VehicleDoor GetClosestVehicleDoor(Vehicle vehicle, Vector3 position)
+        {
+            VehicleDoor door = null;
+            var closestBone = BoneHelper.GetClosestBone(vehicle, position);
+            if (closestBone == null) return null;
+            string boneName = closestBone.Item1;
+            Vector3 bonePos = closestBone.Item2;
+            switch (boneName)
+            {
+                case "door_dside_f":
+                    door = vehicle.Doors[VehicleDoorIndex.FrontLeftDoor];
+                    break;
+                case "door_dside_r":
+                    door = vehicle.Doors[VehicleDoorIndex.BackLeftDoor];
+                    break;
+                case "door_pside_f":
+                    door = vehicle.Doors[VehicleDoorIndex.FrontRightDoor];
+                    break;
+                case "door_pside_r":
+                    door = vehicle.Doors[VehicleDoorIndex.BackRightDoor];
+                    break;
+                case "boot":
+                    door = vehicle.Doors[VehicleDoorIndex.Trunk];
+                    break;
+                case "bonnet":
+                    door = vehicle.Doors[VehicleDoorIndex.Hood];
+                    break;
+            }
+
+            if (handler_debugEnabled)
+            {
+                N.DrawMarker(3, bonePos, 0.3f, 120, 120, 120, 120, true, true);
+            }
+            return door;
+        }
+        
         public static void HandleDoorInteraction(Vehicle vehicle, Control doorControl)
         {
             try
             {
-                var closestBone = BoneHelper.GetClosestBone(vehicle, Game.Player.Character.Position);
-                if (closestBone == null || vehicle.LockStatus != VehicleLockStatus.Unlocked) return;
-
-                string boneName = closestBone.Item1;
-                VehicleDoor door = null;
-
-                switch (boneName)
-                {
-                    case "door_dside_f":
-                        door = vehicle.Doors[VehicleDoorIndex.FrontLeftDoor];
-                        break;
-                    case "door_dside_r":
-                        door = vehicle.Doors[VehicleDoorIndex.BackLeftDoor];
-                        break;
-                    case "door_pside_f":
-                        door = vehicle.Doors[VehicleDoorIndex.FrontRightDoor];
-                        break;
-                    case "door_pside_r":
-                        door = vehicle.Doors[VehicleDoorIndex.BackRightDoor];
-                        break;
-                    case "boot":
-                        door = vehicle.Doors[VehicleDoorIndex.Trunk];
-                        break;
-                    case "bonnet":
-                        door = vehicle.Doors[VehicleDoorIndex.Hood];
-                        break;
-                }
+                VehicleDoor door = GetClosestVehicleDoor(vehicle, Game.Player.Character.Position);
                 
-                if (handler_debugEnabled)
-                {
-                    N.DrawMarker(3, closestBone.Item2, 0.3f, 120, 120, 120, 80, false, true);
-                }
-
                 if (Game.IsControlJustPressed(doorControl) && door != null && !door.IsBroken)
                 {
                     if (door.IsOpen)
@@ -420,6 +411,7 @@ namespace AdvancedInteractionSystem
                     else
                     {
                         door.Open(false, false);
+                        // door.Open(true, false);
                         vehicle.LockStatus = VehicleLockStatus.Unlocked;
                     }
                 }

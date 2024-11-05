@@ -1,13 +1,8 @@
 ﻿using System;
 using GTA;
-using GTA.UI;
-using GTA.Math;
 using GTA.Native;
 using Control = GTA.Control;
-using Screen = GTA.UI.Screen;
 using System.Threading;
-using LemonUI.Elements;
-using System.Collections.Generic;
 
 namespace AdvancedInteractionSystem
 {
@@ -39,16 +34,13 @@ namespace AdvancedInteractionSystem
         }
         private void OnAborted(object sender, EventArgs e)
         {
-            CancelActions();
+            // CancelActions();
         }
 
         // Logic Inside Vehicle:
         private void UpdateCurrentVehicle()
         {
-            if (GPC.IsInVehicle())
-            {
-                currentVehicle = GPC.CurrentVehicle;
-            }
+            currentVehicle = Game.Player.Character.CurrentVehicle;
         }
 
         // Logic On Foot:
@@ -56,7 +48,11 @@ namespace AdvancedInteractionSystem
         {
             if (GPC.IsOnFoot)
             {
-                closestVehicle = World.GetClosestVehicle(GPC.Position, interactionDistance);
+                closestVehicle = World.GetClosestVehicle(GPC.Position, persistenceDistance);
+            }
+            else
+            {
+                closestVehicle = null;
             }
         }
 
@@ -77,12 +73,16 @@ namespace AdvancedInteractionSystem
                 UpdateCurrentVehicle();
                 UpdateClosestVehicle();
 
-                if (currentVehicle != null)
+                IgnitionHandler.DisableAutoStart();
+                IgnitionHandler.IVExit(currentVehicle);
+
+                if (currentVehicle != null && currentVehicle.Exists())
                 {
+                    
                     InteractionHandler.HandleInVehicle(currentVehicle);
                 }
 
-                if (closestVehicle != null)
+                if (closestVehicle != null && closestVehicle.Exists())
                 {
                     InteractionHandler.HandleOnFoot(closestVehicle);
                 }
@@ -94,7 +94,7 @@ namespace AdvancedInteractionSystem
         }
 
         // END ACTIONS: 
-        public static void CancelActions()
+        public static void CompleteActions()
         {
             try
             {
@@ -109,18 +109,16 @@ namespace AdvancedInteractionSystem
                     Game.Player.Character.Task.ClearAll();
                 }
 
-                if (Repairs.repairProp.Exists())
+                if (Repairs.repairProp != null && Repairs.repairProp.Exists())
                 {
                     Repairs.repairProp.Detach();
                     Repairs.repairProp.Delete();
-                    Repairs.repairProp = null;
                 }
 
-                if (Cleaning.cleaningProp.Exists())
+                if (Cleaning.cleaningProp != null && Cleaning.cleaningProp.Exists())
                 {
                     Cleaning.cleaningProp.Detach();
                     Cleaning.cleaningProp.Delete();
-                    Cleaning.cleaningProp = null;
                 }
 
                 Repairs.isRepairing = false;
@@ -131,46 +129,14 @@ namespace AdvancedInteractionSystem
                 AIS.LogException("InteractionManager.CancelActions", ex);
             }
         }
-        public static void CompleteActions()
-        {
-            try
-            {
-                soundStopEvent.Set();
-
-                if (Game.Player.Character != null)
-                {
-                    Game.Player.Character.Task.ClearAll();
-                }
-
-                if (Repairs.repairProp.Exists())
-                {
-                    Repairs.repairProp.Detach();
-                    Repairs.repairProp.Delete();
-                    Repairs.repairProp = null;
-                }
-
-                if (Cleaning.cleaningProp.Exists())
-                {
-                    Cleaning.cleaningProp.Detach();
-                    Cleaning.cleaningProp.Delete();
-                    Cleaning.cleaningProp = null;
-                }
-
-                Repairs.isRepairing = false;
-                Cleaning.cleaning = false;
-            }
-            catch (Exception ex)
-            {
-                AIS.LogException("InteractionManager.CompleteActions", ex);
-            }
-        }
 
         // DISABLE CONTROLS: 
         public static void DisableControls()
         {
             try
             {
-                Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Aim, true);
+                // This doesn't work, causes player to loop in-out of aiming lol 
+                // Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Aim, false);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Attack, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Cover, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.Sprint, true);
@@ -183,6 +149,7 @@ namespace AdvancedInteractionSystem
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.MeleeAttackAlternate, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.MeleeAttackHeavy, true);
                 Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.MeleeAttackLight, true);
+                Function.Call(Hash.DISABLE_CONTROL_ACTION, 0, Control.MeleeBlock, true);
             }
             catch (Exception ex)
             {

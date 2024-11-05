@@ -19,7 +19,9 @@ namespace AdvancedInteractionSystem
         public static readonly ObjectPool pool = new ObjectPool();
         public static readonly NativeMenu menu = new NativeMenu("Advanced Interactions", "Main Menu", "");
         public static readonly NativeMenu fuelmenu = new NativeMenu("Fuel Module", "Fuel Module", "Fuel Settings:");
+        public static readonly NativeMenu repairmenu = new NativeMenu("Repair Module", "Repair Module", "Repair Settings:");
         public static readonly NativeMenu persistencemenu = new NativeMenu("Persistence Module", "Persistence Module", "Vehicle Saving:");
+        public static readonly NativeMenu cleaningmenu = new NativeMenu("Cleaning Module", "Cleaning Module", "Cleaning Settings:");
         // Toggles: 
         private static readonly NativeCheckboxItem modEnabledToggle = new NativeCheckboxItem("Mod Enabled: ", "Enables/Disables the Mod.", SettingsManager.modEnabled);
         private static readonly NativeCheckboxItem debugEnabledToggle = new NativeCheckboxItem("Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.debugEnabled);
@@ -34,7 +36,7 @@ namespace AdvancedInteractionSystem
         private static readonly NativeCheckboxItem cleaning_debugEnabledToggle = new NativeCheckboxItem("Cleaning Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.cleaning_debugEnabled);
         private static readonly NativeCheckboxItem flipEnabledToggle = new NativeCheckboxItem("Flip Vehicle Enabled: ", "Enables ability to flip vehicle when upside down. Recommended: True", SettingsManager.flipEnabled);
         private static readonly NativeCheckboxItem ignitionControlEnabledToggle = new NativeCheckboxItem("Engine Toggle enabled:", "Ability to turn engine on/off using E, or D-Pad Right.", SettingsManager.ignitionControlEnabled);
-        private static readonly NativeDynamicItem<int> fuel_levelItem = new NativeDynamicItem<int>("Set Fuel Level: ", "Set the Current Fuel Level. Useful for Debugging ", (int)Fuel.currentFuel);
+        private static readonly NativeDynamicItem<int> fuel_levelItem = new NativeDynamicItem<int>("Set Fuel Level: ", "Set the Current Fuel Level. Useful for Debugging ", (int)Fuel.CurrentFuel);
 
         public LemonMenu()
         {
@@ -50,24 +52,34 @@ namespace AdvancedInteractionSystem
         public static void LoadMenu()
         {
             pool.Add(menu);
-            pool.Add(fuelmenu);
             pool.Add(persistencemenu);
+            pool.Add(fuelmenu);
+            pool.Add(repairmenu);
+            pool.Add(cleaningmenu);
+            //
             menu.Add(modEnabledToggle);
             menu.Add(debugEnabledToggle);
             menu.Add(fuelmenu);
+            menu.Add(repairmenu);
+            menu.Add(cleaningmenu);
             menu.Add(persistencemenu);
             menu.Add(handler_debugEnabledToggle);
             menu.Add(ignitionControlEnabledToggle);
+            menu.Add(flipEnabledToggle);
+
             persistencemenu.Add(persistenceEnabledToggle);
             persistencemenu.Add(persistence_debugEnabledToggle);
+
             fuelmenu.Add(fuelEnabledToggle);
             fuelmenu.Add(fuel_debugEnabledToggle);
             fuelmenu.Add(fuel_levelItem);
-            menu.Add(repairsEnabledToggle);
-            menu.Add(repairs_debugEnabledToggle);
-            menu.Add(cleaningEnabledToggle);
-            menu.Add(cleaning_debugEnabledToggle);
-            menu.Add(flipEnabledToggle);
+
+            repairmenu.Add(repairsEnabledToggle);
+            repairmenu.Add(repairs_debugEnabledToggle);
+
+            cleaningmenu.Add(cleaningEnabledToggle);
+            cleaningmenu.Add(cleaning_debugEnabledToggle);
+
             // 
             modEnabledToggle.Activated += ToggleMod;
             debugEnabledToggle.Activated += ToggleDebug;
@@ -89,7 +101,7 @@ namespace AdvancedInteractionSystem
             handler_debugEnabledToggle.Checked = handler_debugEnabledToggle.Checked;
             fuelEnabledToggle.Checked = fuelEnabledToggle.Checked;
             fuel_debugEnabledToggle.Checked = fuel_debugEnabledToggle.Checked;
-            fuel_levelItem.SelectedItem = (int)Fuel.currentFuel;
+            fuel_levelItem.SelectedItem = (int)Fuel.CurrentFuel;
             persistenceEnabledToggle.Checked = persistenceEnabledToggle.Checked;
             persistence_debugEnabledToggle.Checked = persistence_debugEnabledToggle.Checked;
             repairs_debugEnabledToggle.Checked = repairs_debugEnabledToggle.Checked;
@@ -164,7 +176,7 @@ namespace AdvancedInteractionSystem
 
         public static void SetFuelLevel(object sender, ItemChangedEventArgs<int> e)
         {
-            int maxLimit = (int)Fuel.maxFuel;
+            int maxLimit = (int)Fuel.MaxFuel;
             int minLimit = 0;
 
             int increment = 500; // Default increment 
@@ -177,14 +189,12 @@ namespace AdvancedInteractionSystem
 
             // Adjust the show duration within the specified range 
             e.Object = (e.Object + increment - minLimit + (maxLimit - minLimit + 1)) % (maxLimit - minLimit + 1) + minLimit;
-            Fuel.currentFuel = (float)e.Object;
 
-            if (debugEnabled)
-            {
-                //Notification.Show($"{showDuration}", true);
-            }
+            float fuel = Persistence.GetVehicleData(InteractionManager.currentVehicle, Persistence.owner).FuelLevel;
 
-            SettingsManager.SaveSettings();
+            fuel += e.Object;
+
+            // SettingsManager.SaveSettings();
         }
         public static void ToggleRepairsDebug(object sender, EventArgs e)
         {

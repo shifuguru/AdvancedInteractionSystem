@@ -1,20 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Media;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Windows.Forms;
-using LemonUI;
-using LemonUI.Menus;
-using iFruitAddon2;
 using GTA;
-using GTA.UI;
 using GTA.Math;
 using GTA.Native;
-using Control = GTA.Control;
 using Screen = GTA.UI.Screen;
-using System.Diagnostics.Eventing.Reader;
 using System.Threading;
 
 namespace AdvancedInteractionSystem
@@ -30,7 +20,7 @@ namespace AdvancedInteractionSystem
         public static bool cleaningSoundEnabled = SettingsManager.cleaningSoundEnabled;
         //
         public static float washIntensity = 1.0f;
-        public static Entity cleaningProp;
+        public static Entity cleaningProp = null;
         public static int prop_rag_01 = 679927467;
         public static Vector3 cleaningObjectPosition = new Vector3(0.0700006f, 0.0100001f, -0.0100001f);
         public static Vector3 cleaningObjectRotation = new Vector3(112.32f, 5.76f, -15.84f);
@@ -50,7 +40,7 @@ namespace AdvancedInteractionSystem
                 Vehicle vehicle = InteractionManager.closestVehicle;
                 if (vehicle == null || !vehicle.Exists() || vehicle.IsDead)
                 {
-                    InteractionManager.CancelActions();
+                    InteractionManager.CompleteActions();
                     return;
                 }
 

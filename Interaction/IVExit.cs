@@ -1,8 +1,6 @@
 using System;
-using GTA;
-using GTA.Native;
-
 using System.IO;
+using GTA;
 
 namespace AdvancedInteractionSystem
 {
@@ -13,6 +11,7 @@ namespace AdvancedInteractionSystem
         public static int exitHeldTime;
         public static Ped player = null;
         public static Vehicle vehicle = null;
+        public static bool isPlayerDriving = false;
         public readonly string defaultContent = "; 1 = enable; 0 = disable" + "?closeDoorOnExit=1";
 
         public IVStyleExit()
@@ -33,7 +32,7 @@ namespace AdvancedInteractionSystem
             {
                 bool exitHeld = Game.IsControlPressed(Control.VehicleExit);
 
-                if (keepEngineRunning || exitHeld && vehicle.LockStatus == 1)
+                if (keepEngineRunning || exitHeld && vehicle.LockStatus.Equals(1))
                 {
                     if (!exitHeld)
                         player.Task.LeaveVehicle(vehicle, closeDoorOnExit);

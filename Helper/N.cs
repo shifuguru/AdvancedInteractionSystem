@@ -4,6 +4,7 @@ using GTA.UI;
 using Screen = GTA.UI.Screen;
 using GTA.Native;
 using System.Drawing;
+using System.Reflection;
 
 namespace AdvancedInteractionSystem
 {
@@ -17,6 +18,14 @@ namespace AdvancedInteractionSystem
         public static string GetMakeNameFromModel(Model model)
         {
             return Function.Call<string>(Hash.GET_MAKE_NAME_FROM_VEHICLE_MODEL, model);
+        }
+        public static string GetVehicleFullName(Vehicle vehicle)
+        {
+            Model model = vehicle.Model;
+            string makeName = GetGxtName(Function.Call<string>(Hash.GET_MAKE_NAME_FROM_VEHICLE_MODEL, model));
+            string vehName = vehicle.LocalizedName;
+            string fullName = makeName + " " + vehName;
+            return fullName;
         }
         public static void SetWaypoint(Vector3 position)
         {
