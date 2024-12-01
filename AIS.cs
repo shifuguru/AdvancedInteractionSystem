@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using GTA;
 using GTA.Math;
-using System.Collections.Generic;
+using GTA.Native;
 
 namespace AdvancedInteractionSystem
 {

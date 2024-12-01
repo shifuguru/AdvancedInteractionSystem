@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design;
-using AdvancedInteractionSystem;
 using GTA;
 using GTA.Native;
 
@@ -9,9 +7,8 @@ namespace AdvancedInteractionSystem
     public class IVStyleExit : Script
     {
         private bool keepEngineRunning = false;
-        private bool eng = false;
         private int enforce = 0;
-        private int dele = 0;
+        private int delay = 0;
         private int rest = 0;
 
         private int engineOnTime = 0;
@@ -36,84 +33,69 @@ namespace AdvancedInteractionSystem
             if (vehicle != null && isPlayerDriving)
             {
                 bool exitHeld = Game.IsControlPressed(Control.VehicleExit);
-
-                #region Fix for IVStyleExit mod: 
-                bool initialEngineState = vehicle.IsEngineRunning;
                 
-                if (initialEngineState)
+                if (vehicle.IsEngineRunning)
                 {
-                    if (engineOnTime < 200)
-                    {
-                        engineOnTime++;
-                    }                    
+                    engineOnTime = Math.Min(engineOnTime + 1, 200);
                     engineOffTime = 0;
                 }
                 else
                 {
-                    if (engineOffTime < 200)
-                    {
-                        engineOffTime++;
-                    }
+                    engineOffTime = Math.Min(engineOffTime + 1, 200);
+                    if (engineOffTime > 30) engineOnTime = 0;
                 }
-
-                if (engineOffTime > 30)
-                {
-                    engineOnTime = 0;
-                }
-                #endregion
-
-                if (keepEngineRunning || exitHeld)
+                
+                if (exitHeld || keepEngineRunning)
                 {
                     if (enforce < 10)
                     {
                         if (engineOnTime > 10)
                         {
-                            keepEngineRunning = true;
                             vehicle.IsEngineRunning = true;
+                            keepEngineRunning = true;
                         }
                         enforce++;
                         return;
                     }
 
-                    if (dele < 200)
+                    if (delay < 200)
                     {
-                        dele++;
+                        delay++;
                         return;
                     }
 
                     if (exitHeld)
                     {
                         vehicle.IsEngineRunning = false;
-                        eng = true;
+                        keepEngineRunning = false;
                     }
                     else
                     {
                         keepEngineRunning = true;
-                        eng = false;
                     }
 
-                    if (rest < 1000 && eng)
+                    if (rest < 1000 && !vehicle.IsEngineRunning)
                     {
                         rest++;
                         return;
                     }
-                    else
-                    {
-                        eng = false;
-                    }
-                    keepEngineRunning = false;
-                    rest = 0;
-                    dele = 0;
-                    enforce = 0;
+
+                    ResetVariables();
                 }
             }
             else
             {
-                keepEngineRunning = false;
-                rest = 0;
-                dele = 0;
-                enforce = 0;
+                ResetVariables();
             }
+        }
+
+        private void ResetVariables()
+        {
+            enforce = 0;
+            delay = 0;
+            rest = 0;
+            engineOffTime = 0;
+            engineOnTime = 0;
         }
     }
 }

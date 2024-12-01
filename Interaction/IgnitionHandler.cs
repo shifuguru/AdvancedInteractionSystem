@@ -128,8 +128,7 @@ namespace AdvancedInteractionSystem
         {
             try
             {
-                if (vehicle == null || !vehicle.Exists())
-                    return;
+                if (vehicle == null || !vehicle.Exists()) return;
 
                 // VEHICLE HEALTH:
                 if (vehicle.IsEngineRunning)
@@ -137,12 +136,12 @@ namespace AdvancedInteractionSystem
                     // ENGINE HEALTH:
                     if (vehicle.EngineHealth <= (vehicle.EngineHealth * 0.2f))
                     {
-                        Notification.Show($"~y~Warning!~s~ Engine Health at Critical Level: ~r~{vehicle.EngineHealth}~s~.", false);
+                        Notification.Show($"~y~Warning!~s~ Engine Health at Critical Level: ~r~{vehicle.EngineHealth}~s~", false);
                     }
                     // PETROL TANK HEALTH:
                     if (vehicle.PetrolTankHealth <= (vehicle.PetrolTankHealth * 0.9f))
                     {
-                        Notification.Show($"~y~Warning!~s~ Fuel Tank damaged: ~r~{vehicle.PetrolTankHealth}~s~.", false);
+                        Notification.Show($"~y~Warning!~s~ Fuel Tank damaged: ~r~{vehicle.PetrolTankHealth}~s~", false);
                     }
                     // TYRE PRESSURE: 
                     InteractionHandler.TyrePressureMonitoringSystem(vehicle);

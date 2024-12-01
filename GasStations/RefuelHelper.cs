@@ -9,7 +9,8 @@ namespace AdvancedInteractionSystem
 {
     public class RefuelHelper : Script
     {
-        public static Vector3[] gasStations = new Vector3[26]
+        // LIST OF GAS STATIONS:
+        public static Vector3[] gasStations = new Vector3[27]
         {
             new Vector3(-2555f, 2334f, 30f),
             new Vector3(-2097f, -320f, 30f),
@@ -35,15 +36,19 @@ namespace AdvancedInteractionSystem
             new Vector3(2537f, 2593f, 30f),
             new Vector3(2581f, 362f, 30f),
             new Vector3(2683f, 3264f, 30f),
+            //
             new Vector3(7090.21f, 10429.16f, 10.10f),
             new Vector3(7003.55f, 8876.31f, 10.10f),
+            // Chilliad Town:
+            new Vector3(354.86f, 5370.63f, 670.02f),
         };
         public static List<Blip> fuelBlips = new List<Blip>();
         public static Blip fuelBlip;
         public static Blip closestBlip;
         public static Vector3 closestGasStation = Vector3.Zero; // Furthest gas station
         public static float closestDistance = float.MaxValue;
-        public static float fuelPumpRadius = 10f;
+        public static float gasStationRadius = 15f;
+        public static float fuelPumpRadius = 2.5f;
         public static bool blipsAreFlashing = false;
 
         public static int refillCost = 0;
@@ -90,7 +95,13 @@ namespace AdvancedInteractionSystem
         // PUMP MANAGER:
         public static void PumpLogic(Vehicle vehicle)
         {
-            if (!IsVehicleNearAnyPump(vehicle)) return;
+            if (!IsVehicleNearGasStation(vehicle)) return;
+
+            if (!IsVehicleNearAnyPump(vehicle))
+            {
+                N.ShowSubtitle("Get closer to a fuel pump to refuel", 1500);
+                return;
+            }
 
             if (Fuel.CurrentFuel >= Fuel.MaxFuel || !vehicle.IsOnAllWheels || !vehicle.IsStopped || vehicle.IsUpsideDown || vehicle.IsDead)
             {
@@ -114,6 +125,7 @@ namespace AdvancedInteractionSystem
             int totalCostToFill = (int)Math.Round(fuelPrice * fuelToFill, 1, MidpointRounding.AwayFromZero);
             string message = $"Hold ~INPUT_VEH_HANDBRAKE~ to refuel ~n~Price per liter: ~g~${fuelPrice}~s~";
 
+            // START FUELLING: 
             if (Game.IsControlPressed(Control.VehicleHandbrake))
             {
                 if (!isRefueling)
@@ -123,25 +135,53 @@ namespace AdvancedInteractionSystem
                 }
                 if (isRefueling)
                 {
-                    Refuel(vehicle.Mods.LicensePlate);
+                    Refuel(vehicle);
                     float fuelFilled = (Fuel.CurrentFuel - initialFuel) / 1000;
                     int fuelFilledCost = (int)Math.Round(fuelPrice * fuelFilled, 1, MidpointRounding.AwayFromZero);
                     N.ShowHelpText($"{message} ~n~Total: ~g~${fuelFilledCost}~s~");
                 }
             }
+            // STOP FUELLING: 
             if (Game.IsControlJustReleased(Control.VehicleHandbrake))
             {
                 if (isRefueling)
                 {
                     isRefueling = false;
                     FinishedRefueling();
+                    Persistence.ResetTripometer(vehicle);
                 }
             }
             if (!isRefueling)
             {
-                N.ShowHelpText($"{message} ~n~Total to fill: ~g~${totalCostToFill}~s~.");
+                N.ShowHelpText($"{message} ~n~Total to fill: ~g~${totalCostToFill}~s~");
             }
         }
+
+        private static readonly Model[] GasPumpModels = new Model[]
+        {
+            new Model("prop_gas_pump_1a"),
+            new Model("prop_gas_pump_1b"),
+            new Model("prop_gas_pump_1c"),
+            new Model("prop_gas_pump_old2"),
+            new Model("prop_gas_pump_old3"),
+            new Model("prop_vintage_pump")
+        };
+
+        public static bool IsVehicleNearGasStation(Vehicle vehicle)
+        {
+            if (gasStations != null)
+            {
+                for (int index = 0; index < gasStations.Length; ++index)
+                {
+                    if (Game.Player.Character.Position.DistanceTo2D(gasStations[index]) <= gasStationRadius)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static bool IsVehicleNearAnyPump(Vehicle vehicle)
         {
             // Vector3 fuelTankPos = GetVehicleTankPos(vehicle);
@@ -150,13 +190,22 @@ namespace AdvancedInteractionSystem
             {
                 for (int index = 0; index < gasStations.Length; ++index)
                 {
-                    if (Game.Player.Character.Position.DistanceTo2D(gasStations[index]) <= fuelPumpRadius)
+                    if (Game.Player.Character.Position.DistanceTo2D(gasStations[index]) <= gasStationRadius)
                     {
-                        return true;
+                        // Get closest pump:
+                        Prop[] nearbyProps = World.GetNearbyProps(Game.Player.Character.Position, fuelPumpRadius, GasPumpModels);
+
+                        if (nearbyProps.Length > 0)
+                        {
+                            if (SettingsManager.fuel_debugEnabled)
+                            {
+                                N.ShowSubtitle($"Found ~b~{nearbyProps.Length}~s~ fuel pump(s) nearby", 1500);
+                            }
+                            return true;
+                        }
                     }
                 }
             }
-
             return false;
         }
         #endregion
@@ -191,8 +240,8 @@ namespace AdvancedInteractionSystem
                                 {
                                     if (Game.IsControlPressed(Control.Context))
                                     {
-                                        Game.Player.Character.Task.PlayAnimation(animDict, animName, 0f, 1500, (AnimationFlags)49);
-                                        Refuel(license);
+                                        Game.Player.Character.Task.PlayAnimation(animDict, animName, 0f,0f, 1500, (AnimationFlags)49, 1);
+                                        Refuel(vehicle);
                                         --jerryCan.Ammo;
                                     }
                                     else
@@ -215,12 +264,13 @@ namespace AdvancedInteractionSystem
         #endregion
 
         #region REFUELLING:
-        public static void Refuel(string license)
+        public static void Refuel(Vehicle vehicle)
         {
+            string license = vehicle.Mods.LicensePlate;
             if (Fuel.CompareLicense(license))
             {
                 // Fuel increment in milliliters
-                float fillAmount = 20f;
+                float fillAmount = 20f * SettingsManager.refuelSpeedMultiplier;
                 float currentFuel = Fuel.GetVehicleFuelLevels(license).currentFuel;
                 float maxFuel = Fuel.GetVehicleFuelLevels(license).maxFuel;
 
@@ -231,6 +281,7 @@ namespace AdvancedInteractionSystem
                 {
                     Fuel.UpdateVehicleFuel(license, -fillAmount);
                 }
+
                 // Fuel.CurrentFuel += fillAmount;
                 // Fuel.CurrentFuel = AIS.Clamp(Fuel.CurrentFuel, 0f, Fuel.MaxFuel); // Clamp to prevent breaking the ceiling 
             }
@@ -257,7 +308,7 @@ namespace AdvancedInteractionSystem
             {
                 Game.Player.Money = money;
 
-                N.DisplayNotification($"Refilled ~y~{fuel}~s~ liters for ~g~${amount}~s~.", false);
+                N.DisplayNotification($"Refilled ~y~{fuel}~s~ liters for ~g~${amount}~s~", false);
             }
         }
         public static int CalculateRefillCost(ref float fuelRefilled)

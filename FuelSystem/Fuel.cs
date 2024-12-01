@@ -358,16 +358,13 @@ namespace AdvancedInteractionSystem
                 {
                     CurrentFuel = GetVehicleFuelLevels(license).currentFuel;
                     MaxFuel = GetVehicleFuelLevels(license).maxFuel;
-                    // float consumptionRate = CalculateFuelConsumptionRate(vehicle);
-                    // CurrentFuel = Math.Max(GetFuelLevel(license) - (consumptionRate * Game.LastFrameTime), 0);
-
-                    // UpdateFuel(vehicle.Mods.LicensePlate, currentFuel);
-                    // Moved to Tick
-                    // RenderFuelBar(CurrentFuel, MaxFuel, false);
                 }
                 else
                 {
-                    N.ShowSubtitle("No License Plate found!", 200);
+                    if (SettingsManager.fuel_debugEnabled)
+                    {
+                        N.ShowSubtitle("No License Plate found!", 200);
+                    }
                 }
             }
             catch (Exception ex)
@@ -377,15 +374,26 @@ namespace AdvancedInteractionSystem
         }
         public static void UpdateFuelForAllVehicles()
         {
+            var licensesToRemove = new List<string>();
+
             foreach (var license in fuelRegistry.Keys.ToList())
             {
                 Vehicle vehicle = GetVehicleByLicense(license);
 
-                if (vehicle != null && vehicle.Exists() && vehicle.IsEngineRunning)
+                if (vehicle != null && vehicle.Exists())
                 {
                     float consumptionRate = CalculateFuelConsumptionRate(vehicle);
                     UpdateVehicleFuel(license, consumptionRate * Game.LastFrameTime);
                 }
+                else
+                {
+                    licensesToRemove.Add(license);
+                }
+            }
+
+            foreach (var license in licensesToRemove)
+            {
+                fuelRegistry.Remove(license);
             }
         }
 
@@ -471,7 +479,11 @@ namespace AdvancedInteractionSystem
                 * tempFactor
                 / engineHealth;
 
-            // float lPerKm = (currentFuel / 1000f) / totalDistancedTravelled;
+            if (speedKph < 1)
+            {
+                consumptionRate *= 0.1f;
+            }
+            // float km/L = totalDistancedTravelled / (currentFuel / 1000f);
             float liters = (CurrentFuel / 1000f);
 
             // float fuelConsumptionRate = baseConsumption * (throttle * acceleration * rpm / engHealth) * (speed + minSpeed) * roadFrictionMultiplier * environmentalMultiplier * behaviouralMultiplier * vehicleSpecsMultiplier;
@@ -481,9 +493,9 @@ namespace AdvancedInteractionSystem
             if (SettingsManager.fuel_debugEnabled)
             {
                 N.ShowSubtitle(
-                $"Fuel = ~y~{Math.Round(liters, 4)} Liters~s~ " 
-                + $"Rate: ~p~{Math.Round(consumptionRate, 3)}~s~ "
-                + $"RPM: ~r~{Math.Round(rpm * 1000, 0)}~s~ "
+                $"Fuel = ~y~{liters:F2} Liters~s~ " 
+                + $"Rate: ~p~{consumptionRate:F3}~s~ "
+                + $"RPM: ~r~{rpm * 1000:F0}~s~ "
                 + $"~n~Speed: ~y~{speedKph}~s~ Health: ~g~{engineHealth}~s~ "
                 + $"~n~Temp: ~o~{engineTemp}C~s~ Weather: ~o~{World.Weather.ToString()}~s~ "
                 , 500);

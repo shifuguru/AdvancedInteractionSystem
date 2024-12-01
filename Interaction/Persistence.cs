@@ -28,6 +28,7 @@ namespace AdvancedInteractionSystem
         public string LicensePlate { get; set; }
         public PlayerCharacter Owner { get; set; }
         public Vector3 Position { get; set; }
+        public Vector3 LastPosition { get; set; }
         public float Heading { get; set; }
         public string Brand { get; set; }
         public string Name { get; set; }
@@ -36,6 +37,11 @@ namespace AdvancedInteractionSystem
         public int SecondaryColor { get; set; }
         public float FuelLevel { get; set; }
         public float MaxFuel {  get; set; }
+        public float TripFuelLevel { get; set; }
+        public float LastFuelLevel { get; set; }
+        public float Odometer { get; set; }
+        public float Tripometer { get; set; }
+        public float FuelEfficiency { get; set; }
         // public VehicleModCollection Mods { get; set; }
         // public Dictionary<int, int> Modifications { get; set; }
 
@@ -91,14 +97,15 @@ namespace AdvancedInteractionSystem
                 return;
 
             Ped GPC = Game.Player.Character;
-            if (GPC == null)
-                return;
-            // Set OWNER based on the current player:
+            if (GPC == null) return;
+
+            // OWNER:
             owner = GetPlayerCharacter(GPC);
 
+            // PERSISTENCE ENABLED?:
             if (!SettingsManager.persistenceEnabled) return;
 
-
+            // ON FOOT:
             if (GPC.IsOnFoot && InteractionManager.closestVehicle != null)
             {
                 RaycastResult raycastResult = World.Raycast(GPC.Position, InteractionManager.closestVehicle.Position, IntersectFlags.Vehicles);
@@ -120,11 +127,15 @@ namespace AdvancedInteractionSystem
 
             }
 
+            // IN VEHICLE:
             if (GPC.IsInVehicle() && InteractionManager.currentVehicle != null)
             {
+                Vehicle vehicle = InteractionManager.currentVehicle;
                 // Persistence behaviour:
-                // Player steps into vehicle & Player takes the vehicle's keys: Vehicle is added to the player's registry
-                VehicleData data = GetVehicleData(InteractionManager.currentVehicle, owner);
+                VehicleData data = GetVehicleData(vehicle);
+                if (data == null) return;
+
+                UpdateVehicleData(vehicle, data, Game.LastFrameTime);
 
                 if (!IsVehicleOwned(data))
                 {
@@ -134,15 +145,102 @@ namespace AdvancedInteractionSystem
             }
         }
 
+        public void DisplayVehicleStats(VehicleData data)
+        {
+            if (data == null) return;
+            if (SettingsManager.debugEnabled)
+            {
+                N.ShowSubtitle($"Odometer: {data.Odometer / 1000f:F2} km\n" +
+                $"Tripometer: {data.Tripometer / 1000f:F2} km\n" +
+                $"Fuel Efficiency: {data.FuelEfficiency:F2} km/L\n" +
+                $"{data.Tripometer / 1000f:F3} km / {data.TripFuelLevel / 1000f:F2} L", 1500);
+            }
+        }
+
+        public void UpdateVehicleData(Vehicle vehicle, VehicleData data, float deltaTime)
+        {
+            if (vehicle == null) return;
+
+            Vector3 currentPosition = vehicle.Position;
+
+            float distanceTraveled = data.LastPosition != Vector3.Zero
+                ? data.LastPosition.DistanceTo(currentPosition)
+                : 0f;
+
+            float fuelLevelDifference = data.LastFuelLevel - vehicle.FuelLevel;
+
+            data.TripFuelLevel += Fuel.CalculateFuelConsumptionRate(vehicle) / 1000f;
+            data.Odometer += distanceTraveled;
+            data.Tripometer += distanceTraveled;
+            data.FuelEfficiency = data.Tripometer / data.TripFuelLevel;
+
+            data.LastPosition = currentPosition;
+            data.FuelLevel = vehicle.FuelLevel;
+            DisplayVehicleStats(data);
+        }
+        public static VehicleData GetVehicleData(Vehicle vehicle)
+        {
+            if (vehicle == null) return null;
+
+            if (TryGetVehicleData(vehicle, out var existingData)) return existingData;
+
+            return new VehicleData
+            {
+                Owner = owner,
+                LicensePlate = vehicle.Mods.LicensePlate,
+                ModelHash = vehicle.Model.Hash,
+                Brand = Game.GetLocalizedString(N.GetMakeNameFromModel(vehicle.Model)),
+                Name = vehicle.LocalizedName,
+                FullName = $"{N.GetVehicleFullName(vehicle)}",
+                Position = vehicle.Position,
+                Heading = vehicle.Heading,
+                // Mods = vehicle.Mods,
+                PrimaryColor = (int)vehicle.Mods.PrimaryColor,
+                SecondaryColor = (int)vehicle.Mods.SecondaryColor,
+                FuelLevel = Fuel.CurrentFuel,
+                MaxFuel = Fuel.MaxFuel,
+                Odometer = Function.Call<float>(Hash.GET_RANDOM_FLOAT_IN_RANGE, 0, 299999999.999f),
+                Tripometer = 0f,
+                FuelEfficiency = 0f,
+                LastPosition = vehicle.Position,
+            };
+        }
+        public static bool TryGetVehicleData(Vehicle vehicle, out VehicleData vehicleData)
+        {
+            vehicleData = null;
+            if (vehicle == null || playerVehicleRegistry == null) return false;
+
+            foreach (var playerEntry in playerVehicleRegistry)
+            {
+                foreach (var data in playerEntry.Value)
+                {
+                    if (data.LicensePlate == vehicle.Mods.LicensePlate && data.ModelHash == vehicle.Model.Hash)
+                    {
+                        vehicleData = data;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static void ResetTripometer(Vehicle vehicle)
+        {
+            VehicleData data = GetVehicleData(vehicle);
+            if (data == null) return;
+            data.Tripometer = 0f;
+            data.TripFuelLevel = data.FuelLevel;
+        }
 
 
+        #region LOCKING / UNLOCKING:
         // INTERACTION:
         private void InteractWithClosestVehicle(Vehicle vehicle)
         {
             if (vehicle == null || !vehicle.Exists()) return;
 
             VehicleLockStatus lockStatus = vehicle.LockStatus;
-            VehicleData data = GetVehicleData(vehicle, owner);
+            VehicleData data = GetVehicleData(vehicle);
 
             bool isOwned = IsVehicleOwned(data);
 
@@ -169,14 +267,14 @@ namespace AdvancedInteractionSystem
                 }
             }
 
-            
+
         }
         private void SaveVehicle(Vehicle vehicle)
         {
             try
             {
                 if (vehicle == null || !vehicle.Exists()) return;
-                VehicleData data = GetVehicleData(vehicle, owner);
+                VehicleData data = GetVehicleData(vehicle);
                 if (data == null) return;
 
                 vehicle.IsPersistent = true;
@@ -215,7 +313,7 @@ namespace AdvancedInteractionSystem
                 }
             }
 
-            VehicleData data = GetVehicleData(vehicle, owner);
+            VehicleData data = GetVehicleData(vehicle);
 
             if (data != null)
             {
@@ -237,7 +335,7 @@ namespace AdvancedInteractionSystem
 
                         if (SettingsManager.persistence_debugEnabled)
                         {
-                            N.ShowSubtitle($"Vehicle {vehicle.LocalizedName} : {plate} - File deleted", 2500);
+                            N.ShowSubtitle($"{vehicle.LocalizedName} : {plate} - File deleted", 2500);
                         }
                     }
 
@@ -284,10 +382,6 @@ namespace AdvancedInteractionSystem
             vehicle.LockStatus = VehicleLockStatus.CannotEnter;
             vehicle.IsAlarmSet = true;
         }
-
-
-
-        #region LOCKING / UNLOCKING:
         // KEY PROP:
         public static Entity AttachKey(Ped ped)
         {
@@ -339,14 +433,12 @@ namespace AdvancedInteractionSystem
         {
             AudioManager.PlaySound("unlock.wav");
         }
-        #endregion
-
-        // FUNCTIONS:
-        #region FUNCTIONS:
         private static void HideWeapon(Ped ped)
         {
             Function.Call(Hash.SET_PED_CURRENT_WEAPON_VISIBLE, ped, false, true, true, true);
         }
+        #endregion
+
         private PlayerCharacter GetPlayerCharacter(Ped player)
         {
             Model model = player.Model;
@@ -376,27 +468,7 @@ namespace AdvancedInteractionSystem
 
             return character;
         }
-        public static VehicleData GetVehicleData(Vehicle vehicle, PlayerCharacter owner)
-        {
-            VehicleData newData = new VehicleData
-            {
-                Owner = owner,
-                LicensePlate = vehicle.Mods.LicensePlate,
-                ModelHash = vehicle.Model.Hash,
-                Brand = Game.GetLocalizedString(N.GetMakeNameFromModel(vehicle.Model)),
-                Name = vehicle.LocalizedName,
-                FullName = $"{N.GetVehicleFullName(vehicle)}",
-                Position = vehicle.Position,
-                Heading = vehicle.Heading,
-                // Mods = vehicle.Mods,
-                PrimaryColor = (int)vehicle.Mods.PrimaryColor,
-                SecondaryColor = (int)vehicle.Mods.SecondaryColor,
-                FuelLevel = Fuel.CurrentFuel,
-                MaxFuel = Fuel.MaxFuel,
-            };
 
-            return newData;
-        }
         // FILE CHECK: 
         public static bool CheckDirectoryExists(string directoryPath)
         {
@@ -418,7 +490,8 @@ namespace AdvancedInteractionSystem
                 return true;
             }
         }
-        // REGISTRY:        
+        
+        // REGISTRY:
         private bool IsVehicleOwned(VehicleData data)
         {
             return playerVehicleRegistry[owner].Contains(data);
@@ -430,7 +503,7 @@ namespace AdvancedInteractionSystem
         }
         private void RemoveFromRegistry(Vehicle vehicle)
         {
-            VehicleData data = GetVehicleData(vehicle, owner);
+            VehicleData data = GetVehicleData(vehicle);
             playerVehicleRegistry[owner].Remove(data);
             vehicle.IsPersistent = false;
             N.DisplayNotification($"{data.Owner} abandoned the keys to the ~b~{data.FullName}~s~", false);
@@ -479,6 +552,7 @@ namespace AdvancedInteractionSystem
                 if (!Directory.Exists(directoryPath))
                 {
                     Directory.CreateDirectory(directoryPath);
+
                     if (SettingsManager.persistence_debugEnabled)
                     {
                         N.ShowSubtitle($"Created directory: {directoryPath}", 1000);
@@ -494,7 +568,7 @@ namespace AdvancedInteractionSystem
                     }
                 }
 
-                N.DisplayNotificationSMS(NotificationIcon.MpMorsMutual, "Mors Mutual Insurance", "", $"Vehicle {data.FullName} added to {owner}'s Insurance Policy", false, false);
+                N.DisplayNotificationSMS(NotificationIcon.MpMorsMutual, "Mors Mutual Insurance", "", $"{data.FullName} added to {owner}'s Insurance Policy", false, false);
 
                 if (SettingsManager.persistence_debugEnabled)
                 {
@@ -559,7 +633,10 @@ namespace AdvancedInteractionSystem
                                     }
                                     else
                                     {
-                                        N.ShowSubtitle($"Could not load vehicle {data.FullName} - position occupied", 2500);
+                                        if (SettingsManager.persistence_debugEnabled)
+                                        {
+                                            N.ShowSubtitle($"Could not load vehicle: {data.FullName} ~n~Position occupied", 2500);
+                                        }
                                     }
                                 }
                             }
@@ -600,7 +677,7 @@ namespace AdvancedInteractionSystem
                     using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         VehicleData vehicleData = (VehicleData)serializer.Deserialize(stream);
-                        AIS.LogDebug("Deserialization completed successfully.");
+                        AIS.LogDebug("Deserialization completed successfully");
                         return vehicleData;
                     }
                 }
@@ -631,7 +708,7 @@ namespace AdvancedInteractionSystem
                 return null;
             }
         }
-        #endregion
+
 
         private void OnAborted(object sender, EventArgs e)
         {

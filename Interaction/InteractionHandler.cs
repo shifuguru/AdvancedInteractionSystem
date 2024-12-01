@@ -17,7 +17,7 @@ namespace AdvancedInteractionSystem
         private static Control cleanControl;
         private static Control repairControl;
         private static Control doorControl;
-        private static Control ignitionControl;
+        // private static Control ignitionControl;
 
         public static float interactionDistance = 8f;
         public static DateTime ignitionHeldStartTime; // READONLY
@@ -34,7 +34,7 @@ namespace AdvancedInteractionSystem
             cleanControl = SettingsManager.cleanControl;
             repairControl = SettingsManager.repairControl;
             doorControl = SettingsManager.doorControl;
-            ignitionControl = SettingsManager.ignitionControl;
+            // ignitionControl = SettingsManager.ignitionControl;
         }
 
         // audio - BARRY3C_IGNITION_FAIL
@@ -53,7 +53,7 @@ namespace AdvancedInteractionSystem
                 if (!isRefueling)
                 {
                     IgnitionHandler.HandleIgnition(currentVehicle);
-                }                
+                }
             }
             catch (Exception ex)
             {
@@ -65,8 +65,29 @@ namespace AdvancedInteractionSystem
         {
             try
             {
+                Entity entity = Game.Player.LockedOnEntity;
+                if (entity != null) return;
+
                 if (closestVehicle == null || !closestVehicle.Exists()) return;
-                InteractionManager.currentVehicle = null;
+
+                if (InteractionManager.currentVehicle != null)
+                {
+                    InteractionManager.currentVehicle = null;
+                }
+
+                /* BETA:
+                // get closest bone :
+                var closestBone = BoneHelper.GetClosestBone(InteractionManager.closestVehicle, Game.Player.Character.Position);
+                if (closestBone == null) return;
+                
+                // BONE INFO:
+                string boneName = closestBone.Item1;
+                Vector3 bonePosition = closestBone.Item2;
+
+                // focus closest bone :
+                
+                // FocusClosestBone();
+                */
 
                 float distance = Game.Player.Character.Position.DistanceTo(closestVehicle.Position);
                 bool vehicleClose = distance < interactionDistance;
@@ -75,16 +96,19 @@ namespace AdvancedInteractionSystem
                 if (facingVehicle && vehicleClose)
                 {
                     if (Game.Player.Character.Weapons.Current.LocalizedName == "Jerry Can") return;
-                    
+
                     if (Game.IsControlPressed(Control.Aim))
                     {
                         if (Game.Player.Character.Weapons.Current.LocalizedName == "Unarmed")
                         {
                             ShowInteractionOptions(closestVehicle);
                         }
-                        else if (SettingsManager.debugEnabled)
+                        else
                         {
-                            N.ShowSubtitle("Stow your weapon to interact with this vehicle", 200);
+                            if (SettingsManager.debugEnabled)
+                            {
+                                N.ShowSubtitle("Hide your weapon to interact with this vehicle", 2500);
+                            }
                         }
                     }
                 }
@@ -145,6 +169,7 @@ namespace AdvancedInteractionSystem
             string flip_message = GetFlipMessage(closestVehicle);
             string message = $"{door_message}{repair_message}{clean_message}";
             N.ShowHelpText($"{message}");
+            AIS.ShowText(0, 0, $"{closestVehicle.LocalizedName}", 0.5f);
         }
 
         public static void HandleInteractionControls(Vehicle closestVehicle)

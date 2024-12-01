@@ -12,6 +12,7 @@ namespace AdvancedInteractionSystem
         public static Vector3 repairObjectPosition = new Vector3(0.0700006f, 0.0100001f, -0.0100001f);
         public static Vector3 repairObjectRotation = new Vector3(112.32f, 5.76f, -15.84f);
         public static DateTime actionStartTime;
+
         public const float maxHealth = 1000f;
         public static float totalHealth = 1000f;
         private static float bodyHealth;
@@ -67,6 +68,7 @@ namespace AdvancedInteractionSystem
             {
                 AIS.LogException("Repairs.PlayRepairAnimation", ex);
             }
+            
         }
 
 
@@ -91,8 +93,8 @@ namespace AdvancedInteractionSystem
                     InteractionManager.CompleteActions();
                     return;
                 }
-                
-                int repairTime = DateTime.Now.Millisecond - actionStartTime.Millisecond;
+
+                int repairTime = Game.GameTime - actionStartTime.Millisecond;
                 if (repairTime < 500)
                 {
                     return;
@@ -134,7 +136,32 @@ namespace AdvancedInteractionSystem
             isRepairing = false;
         }
 
-        // Start Repair Process: 
+        // Start Repair Process:
+
+        private void RepairBody(Vehicle vehicle)
+        {
+            vehicle.BodyHealth = 1000f;
+        }
+        private void RepairEngine(Vehicle vehicle)
+        {
+            vehicle.EngineHealth = 1000f;
+        }
+        private void RepairWindow(Vehicle vehicle)
+        {
+            vehicle.Doors[VehicleDoorIndex.BackLeftDoor].Close();
+        }
+        private void RepairAllWindows(Vehicle vehicle)
+        {
+            vehicle.Windows[0].Repair();
+        }
+        private void RepairWheel(Vehicle vehicle)
+        {
+
+        }
+        private void RepairAllWheels(Vehicle vehicle)
+        {
+
+        }
 
         public static void StartRepairProcess(Vehicle vehicle)
         {
@@ -155,21 +182,21 @@ namespace AdvancedInteractionSystem
                 // If vehicle's health is too low we cannot repair it. 
                 if (vehicle.EngineHealth <= 100f)
                 {
-                    N.DisplayNotification("~r~Vehicle Engine is beyond repair.~s~", false);
+                    N.DisplayNotification("~r~Vehicle Engine is beyond repair~s~", false);
                     return false;
                 }
 
                 // If the engine is running and repairs require engine off (realistic)
                 if (SettingsManager.repairRequiresEngineOff && vehicle.IsEngineRunning)
                 {
-                    N.DisplayNotification($"~o~Engine must be off prior to repair.~s~", false);
+                    N.DisplayNotification($"~o~Engine must be off prior to repair~s~", false);
                     return false;
                 }
 
                 // If the engine cover is closed
                 if (!vehicle.Doors[VehicleDoorIndex.Hood].IsOpen)
                 {
-                    N.ShowSubtitle("Open the hood to repair the engine.", 2500);
+                    N.ShowSubtitle("Open the hood to repair the engine", 1500);
                     return false;
                 }
 
@@ -197,8 +224,6 @@ namespace AdvancedInteractionSystem
             {
                 if (vehicle == null) return;
 
-                // Not sure if I like this, should player close doors manually after a repair? 
-                // InteractionHandler.CloseVehicleDoors(vehicle);
                 InteractionManager.CompleteActions();
                 Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
                 

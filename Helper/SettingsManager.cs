@@ -36,7 +36,7 @@ namespace AdvancedInteractionSystem
         public static bool cleaning_debugEnabled = true;
         // Persistence: 
         public static bool persistenceEnabled = true;
-        public static bool persistence_debugEnabled = true;
+        public static bool persistence_debugEnabled = false;
         // Toggle Modules: 
         public static bool flipEnabled = true; // Enable the Vehicle Flipping Module. 
 
@@ -58,6 +58,7 @@ namespace AdvancedInteractionSystem
         public static float persistenceDistance = 10f;
         public static int repairDuration = 8;
         public static int washDuration = 6;
+        public static int refuelSpeedMultiplier = 1;
         public static float ignitionHoldDuration = 1.5f;
         public static bool showFlipNotification = true;
         public static bool cleaningSoundEnabled = true;
@@ -163,13 +164,15 @@ namespace AdvancedInteractionSystem
                     SaveSettings();
                     
                     if (debugEnabled)
-                        N.DisplayNotification($"Loaded Advanced Interaction System settings.", true);
+                        N.DisplayNotification($"Loaded Advanced Interaction System settings", true);
                 }
                 else
                 {
                     // Loading Failed! 
                     if (debugEnabled)
+                    {
                         N.ShowSubtitle($"~r~Warning!: Loading Advanced Interaction System Settings failed.~s~", 500);
+                    }
                 }
             }
             catch (Exception ex)
@@ -221,13 +224,17 @@ namespace AdvancedInteractionSystem
                     settings.Save();
 
                     if (debugEnabled)
-                        Notification.Show($"Saved Advanced Interaction System settings.", true);
+                    {
+                        Notification.Show($"Saved Advanced Interaction System settings", true);
+                    }
                 }
                 else
                 { 
                     // Saving Failed!
                     if (debugEnabled)
+                    {
                         N.ShowSubtitle($"~r~Warning!: Saving Advanced Interaction System Settings failed.~s~", 500);
+                    }
                 }
             }
             catch (Exception ex)
