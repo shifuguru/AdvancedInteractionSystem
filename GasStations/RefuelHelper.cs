@@ -164,7 +164,7 @@ namespace AdvancedInteractionSystem
             new Model("prop_gas_pump_1c"),
             new Model("prop_gas_pump_old2"),
             new Model("prop_gas_pump_old3"),
-            new Model("prop_vintage_pump")
+            new Model("prop_vintage_pump"),
         };
 
         public static bool IsVehicleNearGasStation(Vehicle vehicle)

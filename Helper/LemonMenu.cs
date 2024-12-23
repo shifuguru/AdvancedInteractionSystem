@@ -206,7 +206,7 @@ namespace AdvancedInteractionSystem
             int maxLimit = (int)Fuel.MaxFuel;
             int minLimit = 0;
 
-            int increment = 500; // Default increment 
+            int increment = 500; // Default increment half liter
 
             // Determine the increment based on the menu direction
             if (e.Direction == Direction.Left)
@@ -216,7 +216,7 @@ namespace AdvancedInteractionSystem
 
             // Adjust the show duration within the specified range 
             e.Object = (e.Object + increment - minLimit + (maxLimit - minLimit + 1)) % (maxLimit - minLimit + 1) + minLimit;
-            Fuel.UpdateVehicleFuel(InteractionManager.currentVehicle.Mods.LicensePlate, -e.Object);
+            Fuel.UpdateVehicleFuel(InteractionManager.currentVehicle.Mods.LicensePlate, -increment);
             
             // SettingsManager.SaveSettings();
         }

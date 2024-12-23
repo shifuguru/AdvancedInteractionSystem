@@ -9,8 +9,6 @@ using Control = GTA.Control;
 using GTA.Native;
 using GTA.Math;
 using GSH = AdvancedInteractionSystem.RefuelHelper;
-using System.Runtime.ConstrainedExecution;
-using System.ComponentModel;
 
 namespace AdvancedInteractionSystem
 {
@@ -22,7 +20,7 @@ namespace AdvancedInteractionSystem
         public static Queue<string> licenseQueue = new Queue<string>();
 
         #region Fuel: 
-        public static float CurrentFuel = 0f;
+        public static float CurrentFuel = 0f; // Game.Player.Character.CurrentVehicle.FuelLevel
         public static float MaxFuel = 65000f; // Max Volume of Fuel Tank
         public static float LowFuel = MaxFuel * 0.25f; // 25% fuel: Low Fuel warning. 
         public static float MinFuel = MaxFuel * 0.10f; // 10% fuel: Reserve Tank warning.
@@ -250,6 +248,9 @@ namespace AdvancedInteractionSystem
         // ENGINE: 
         public static void ManageEngineCeasure()
         {
+            // This method is actually no longer required as we can just directly manipulate the vehicle's fuel level. 
+            // Once the Fuel Level reaches 0, the vehicle shuts off by the game. 
+
             if (CurrentFuel <= 1f)
             {
                 N.SetVehicleEngineOn(Game.Player.Character.LastVehicle, false, false, true);
@@ -271,6 +272,7 @@ namespace AdvancedInteractionSystem
                 
                 // If Current Vehicle doesn't exist, does the Last Vehicle?
                 Vehicle currentVehicle = InteractionManager.currentVehicle;
+
                 if (currentVehicle != null && currentVehicle.Exists())
                 {
                     RenderFuelBar(CurrentFuel, MaxFuel, false);
@@ -291,7 +293,7 @@ namespace AdvancedInteractionSystem
 
                 UpdateFuelWarning();
                 UpdateFuelBarColor();
-                ManageEngineCeasure();
+                // ManageEngineCeasure();
                 
                 GSH.RefillWithJerryCan(InteractionManager.closestVehicle);
             }
@@ -331,11 +333,14 @@ namespace AdvancedInteractionSystem
 
         public static void UpdateVehicleFuel(string license, float fuelConsumption)
         {
+            // Updates the Fuel Level in the Database, 
+            // This allows persistent Fuel Levels if the car despawns.
             if (CompareLicense(license))
             {
                 var (currentFuel, maxFuel) = fuelRegistry[license];
                 currentFuel = Math.Max(currentFuel - fuelConsumption, 0);
                 fuelRegistry[license] = (currentFuel, maxFuel);
+
             }
         }
 
@@ -358,6 +363,7 @@ namespace AdvancedInteractionSystem
                 {
                     CurrentFuel = GetVehicleFuelLevels(license).currentFuel;
                     MaxFuel = GetVehicleFuelLevels(license).maxFuel;
+                    vehicle.FuelLevel = GetVehicleFuelLevels(license).currentFuel;
                 }
                 else
                 {

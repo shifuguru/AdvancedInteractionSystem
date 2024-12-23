@@ -7,6 +7,7 @@ namespace AdvancedInteractionSystem
     public class IVStyleExit : Script
     {
         private bool keepEngineRunning = false;
+        
         private int enforce = 0;
         private int delay = 0;
         private int rest = 0;

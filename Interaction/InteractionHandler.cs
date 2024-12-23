@@ -169,7 +169,9 @@ namespace AdvancedInteractionSystem
             string flip_message = GetFlipMessage(closestVehicle);
             string message = $"{door_message}{repair_message}{clean_message}";
             N.ShowHelpText($"{message}");
-            AIS.ShowText(0, 0, $"{closestVehicle.LocalizedName}", 0.5f);
+            // COME BACK TO THIS?:
+            // Message above car showing stats, (there must be a Function in the game that performs this).
+            // AIS.ShowText(0, 0, $"{closestVehicle.LocalizedName}", 0.5f);
         }
 
         public static void HandleInteractionControls(Vehicle closestVehicle)
