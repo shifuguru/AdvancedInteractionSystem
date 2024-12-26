@@ -29,7 +29,7 @@ namespace AdvancedInteractionSystem
         {
             Tick += OnTick;
             Aborted += OnAborted;
-            Interval = 10;
+            Interval = 0;
             Function.Call(Hash.REQUEST_ANIM_DICT, "veh@std@ds@base");
         }
         private void OnAborted(object sender, EventArgs e)

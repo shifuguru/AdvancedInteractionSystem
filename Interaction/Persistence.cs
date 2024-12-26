@@ -148,7 +148,7 @@ namespace AdvancedInteractionSystem
         public void DisplayVehicleStats(VehicleData data)
         {
             if (data == null) return;
-            if (SettingsManager.debugEnabled)
+            if (SettingsManager.fuel_debugEnabled)
             {
                 N.ShowSubtitle($"Odometer: {data.Odometer / 1000f:F2} km\n" +
                 $"Tripometer: {data.Tripometer / 1000f:F2} km\n" +

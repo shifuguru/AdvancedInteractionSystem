@@ -7,8 +7,8 @@
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\ivstyleexit.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|f:\\gta5 scripts\\projects\\advancedinteractionsystem\\interaction\\interactionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\interactionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\interaction\\persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\fuelsystem\\fuel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -19,12 +19,16 @@
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:helper\\lemonmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\gasstations\\refuelhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:gasstations\\refuelhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\interaction\\interactionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\interactionmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\interaction\\interactionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\interactionhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\gasstations\\refuelhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:gasstations\\refuelhelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,7 +38,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -54,41 +58,28 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Persistence.cs",
+              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\Persistence.cs",
+              "RelativeDocumentMoniker": "Interaction\\Persistence.cs",
+              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\Persistence.cs",
+              "RelativeToolTip": "Interaction\\Persistence.cs",
+              "ViewState": "AgIAAIkAAAAAAAAAAAAuwJQAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-26T01:14:12.297Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
               "Title": "IVStyleExit.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\IVStyleExit.cs",
               "RelativeDocumentMoniker": "Interaction\\IVStyleExit.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\IVStyleExit.cs",
               "RelativeToolTip": "Interaction\\IVStyleExit.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-23T08:46:51.879Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "InteractionHandler.cs",
-              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\InteractionHandler.cs",
-              "RelativeDocumentMoniker": "Interaction\\InteractionHandler.cs",
-              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\InteractionHandler.cs",
-              "RelativeToolTip": "Interaction\\InteractionHandler.cs",
-              "ViewState": "AgIAAB0AAAAAAAAAAAAmwDYAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-16T07:42:46.738Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "RefuelHelper.cs",
-              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\GasStations\\RefuelHelper.cs",
-              "RelativeDocumentMoniker": "GasStations\\RefuelHelper.cs",
-              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\GasStations\\RefuelHelper.cs",
-              "RelativeToolTip": "GasStations\\RefuelHelper.cs",
-              "ViewState": "AgIAAP4AAAAAAAAAAAAqwBkBAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-16T07:00:45.519Z"
             },
             {
               "$type": "Document",
@@ -104,26 +95,49 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "InteractionHandler.cs",
+              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\InteractionHandler.cs",
+              "RelativeDocumentMoniker": "Interaction\\InteractionHandler.cs",
+              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\InteractionHandler.cs",
+              "RelativeToolTip": "Interaction\\InteractionHandler.cs",
+              "ViewState": "AgIAADEAAAAAAAAAAIBZwDYAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-16T07:42:46.738Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "RefuelHelper.cs",
+              "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\GasStations\\RefuelHelper.cs",
+              "RelativeDocumentMoniker": "GasStations\\RefuelHelper.cs",
+              "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\GasStations\\RefuelHelper.cs",
+              "RelativeToolTip": "GasStations\\RefuelHelper.cs",
+              "ViewState": "AgIAABYBAAAAAAAAAABRwBkBAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-16T07:00:45.519Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
               "Title": "Fuel.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\FuelSystem\\Fuel.cs",
               "RelativeDocumentMoniker": "FuelSystem\\Fuel.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\FuelSystem\\Fuel.cs",
               "RelativeToolTip": "FuelSystem\\Fuel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGMBAABHAAAAAAAAAA==",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAWwB8AAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-16T06:37:11.86Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-16T06:37:11.86Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "InteractionManager.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\InteractionManager.cs",
               "RelativeDocumentMoniker": "Interaction\\InteractionManager.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\InteractionManager.cs",
               "RelativeToolTip": "Interaction\\InteractionManager.cs",
-              "ViewState": "AgIAAD4AAAAAAAAAAAAmwEAAAAA9AAAAAAAAAA==",
+              "ViewState": "AgIAABQAAAAAAAAAAAAAwB8AAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-09T11:33:27.418Z"
             }
