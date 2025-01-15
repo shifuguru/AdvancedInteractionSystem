@@ -28,6 +28,8 @@ namespace AdvancedInteractionSystem
         private static readonly NativeCheckboxItem handler_debugEnabledToggle = new NativeCheckboxItem("Vehicle Handler Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.handler_debugEnabled);
         private static readonly NativeCheckboxItem fuelEnabledToggle = new NativeCheckboxItem("Fuel Module enabled:", "Realtime Fuel calculation based on your vehicle's handling and driving behaviour", SettingsManager.fuelEnabled);
         private static readonly NativeCheckboxItem fuel_debugEnabledToggle = new NativeCheckboxItem("Fuel Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.fuel_debugEnabled);
+        private static readonly NativeCheckboxItem pump_debugEnabledToggle = new NativeCheckboxItem("Pump Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.pump_debugEnabled);
+        private static readonly NativeCheckboxItem trip_debugEnabledToggle = new NativeCheckboxItem("Tripometer Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.trip_debugEnabled);
         private static readonly NativeCheckboxItem persistenceEnabledToggle = new NativeCheckboxItem("Persistence Module Enabled: ", "Enables Vehicle Saving and Persistence", SettingsManager.persistenceEnabled);
         private static readonly NativeCheckboxItem persistence_debugEnabledToggle = new NativeCheckboxItem("Persistence Debug Enabled: ", "Enables Debug Notifications. Recommended: False", SettingsManager.persistence_debugEnabled);
         private static readonly NativeCheckboxItem repairsEnabledToggle = new NativeCheckboxItem("Repair Module enabled:", "Repair vehicles when standing close", SettingsManager.repairsEnabled);
@@ -73,6 +75,8 @@ namespace AdvancedInteractionSystem
 
             fuelmenu.Add(fuelEnabledToggle);
             fuelmenu.Add(fuel_debugEnabledToggle);
+            fuelmenu.Add(pump_debugEnabledToggle);
+            fuelmenu.Add(trip_debugEnabledToggle);
             fuelmenu.Add(fuel_levelItem);
             fuelmenu.Add(refuelSpeedMultiplierItem);
 
@@ -89,6 +93,8 @@ namespace AdvancedInteractionSystem
             ignitionControlEnabledToggle.Activated += ToggleEngineControl;
             fuelEnabledToggle.Activated += ToggleFuel;
             fuel_debugEnabledToggle.Activated += ToggleFuelDebug;
+            pump_debugEnabledToggle.Activated += TogglePumpDebug;
+            trip_debugEnabledToggle.Activated += ToggleTripDebug;
             fuel_levelItem.ItemChanged += SetFuelLevel;
             refuelSpeedMultiplierItem.ItemChanged += SetRefuelMultiplier;
             persistenceEnabledToggle.Activated += TogglePersistence;
@@ -160,6 +166,22 @@ namespace AdvancedInteractionSystem
             SettingsManager.fuel_debugEnabled = !SettingsManager.fuel_debugEnabled;
             fuel_debugEnabledToggle.Checked = SettingsManager.fuel_debugEnabled;
             Screen.ShowSubtitle($"Fuel Debug Enabled: {SettingsManager.fuel_debugEnabled}", 1500);
+            SettingsManager.SaveSettings();
+        }
+
+        public static void TogglePumpDebug(object sender, EventArgs e)
+        {
+            SettingsManager.pump_debugEnabled = !SettingsManager.pump_debugEnabled;
+            pump_debugEnabledToggle.Checked = SettingsManager.pump_debugEnabled;
+            Screen.ShowSubtitle($"Pump Debug Enabled: {SettingsManager.pump_debugEnabled}", 1500);
+            SettingsManager.SaveSettings();
+        }
+
+        public static void ToggleTripDebug(object sender, EventArgs e)
+        {
+            SettingsManager.trip_debugEnabled = !SettingsManager.trip_debugEnabled;
+            trip_debugEnabledToggle.Checked = SettingsManager.trip_debugEnabled;
+            Screen.ShowSubtitle($"Tripometer Debug Enabled: {SettingsManager.trip_debugEnabled}", 1500);
             SettingsManager.SaveSettings();
         }
 

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
 using GTA;
+using Control = GTA.Control;
 using GTA.Math;
 using GTA.Native;
 
@@ -48,7 +50,7 @@ namespace AdvancedInteractionSystem
         public static Vector3 closestGasStation = Vector3.Zero; // Furthest gas station
         public static float closestDistance = float.MaxValue;
         public static float gasStationRadius = 15f;
-        public static float fuelPumpRadius = 2.5f;
+        public static float fuelPumpRadius = 1.5f;
         public static bool blipsAreFlashing = false;
 
         public static int refillCost = 0;
@@ -99,7 +101,7 @@ namespace AdvancedInteractionSystem
 
             if (!IsVehicleNearAnyPump(vehicle))
             {
-                N.ShowSubtitle("Get closer to a fuel pump to refuel", 1500);
+                N.ShowHelpText("Get closer to a pump to refuel");
                 return;
             }
 
@@ -184,28 +186,68 @@ namespace AdvancedInteractionSystem
 
         public static bool IsVehicleNearAnyPump(Vehicle vehicle)
         {
-            // Vector3 fuelTankPos = GetVehicleTankPos(vehicle);
+            // Early return, in-case gas station list is missing:
+            if (gasStations == null) return false;
 
-            if (gasStations != null)
+            Vector3 closestStation = Vector3.Zero;
+
+            foreach (Vector3 gasStation in gasStations)
             {
-                for (int index = 0; index < gasStations.Length; ++index)
-                {
-                    if (Game.Player.Character.Position.DistanceTo2D(gasStations[index]) <= gasStationRadius)
-                    {
-                        // Get closest pump:
-                        Prop[] nearbyProps = World.GetNearbyProps(Game.Player.Character.Position, fuelPumpRadius, GasPumpModels);
+                // Move onto the next gas station in-case value is null or out of range:
+                if (gasStation == null || Game.Player.Character.Position.DistanceTo2D(gasStation) > gasStationRadius) continue;
 
-                        if (nearbyProps.Length > 0)
-                        {
-                            if (SettingsManager.fuel_debugEnabled)
-                            {
-                                N.ShowSubtitle($"Found ~b~{nearbyProps.Length}~s~ fuel pump(s) nearby", 1500);
-                            }
-                            return true;
-                        }
+                closestGasStation = gasStation;
+
+                // Get the closest Fuel Pump Prop from the Gas Pump Models:
+                Prop closestProp = World.GetClosestProp(Game.Player.Character.Position, gasStationRadius, GasPumpModels);
+                
+                // If no pump found or it no longer exists, keep searching:
+                if (closestProp == null || !closestProp.Exists()) continue;
+
+                Vector3 direction = Game.Player.Character.Position - closestProp.Position;
+                direction.Normalize();
+
+                float dot = Vector3.Dot(direction, closestProp.ForwardVector);
+                float offsetDistance = 2.65f;
+
+                Vector3 sideVector = (dot >= 0)
+                    ? closestProp.ForwardVector
+                    : -closestProp.ForwardVector;
+
+                float heightAbovePump = 2.0f;
+
+                Vector3 drawPosCarSpot = closestProp.Position + sideVector * offsetDistance + new Vector3(0f, 0f, 0.75f); // Car spot
+                Vector3 drawPosPumpTop = closestProp.Position + new Vector3(0, 0, heightAbovePump + 0.8f); // $ sign above fuel pump
+
+                // Draw Dollar Symbol above pump:
+                N.DrawMarker(29, drawPosPumpTop, 0.8f, 114, 204, 114, 255, true, true);
+
+                float distanceToPump = Game.Player.Character.Position.DistanceTo2D(drawPosCarSpot);
+
+                if (Game.Player.Character.Position.DistanceTo2D(drawPosCarSpot) <= fuelPumpRadius)
+                {
+                    // Valid pump found => return true immediately:
+                    if (SettingsManager.pump_debugEnabled)
+                    {
+                        N.DrawMarker(1, drawPosCarSpot, fuelPumpRadius, 255, 255, 255, 120, false, false);
                     }
+                    return true;
+                }
+
+                if (Game.Player.Character.Position.DistanceTo2D(drawPosCarSpot) <= 5f)
+                {
+                    N.DrawMarker(20, new Vector3(drawPosCarSpot.X, drawPosCarSpot.Y, drawPosCarSpot.Z + 1f), fuelPumpRadius, 255, 255, 255, 100, true, true);
+                }
+                else if (Game.Player.Character.Position.DistanceTo2D(drawPosCarSpot) <= 7.5f)
+                {
+                    N.DrawMarker(21, new Vector3(drawPosCarSpot.X, drawPosCarSpot.Y, drawPosCarSpot.Z + 1f), fuelPumpRadius, 255, 255, 255, 100, true, true);
+                }
+                else if (Game.Player.Character.Position.DistanceTo2D(drawPosCarSpot) <= gasStationRadius)
+                {
+                    N.DrawMarker(22, new Vector3(drawPosCarSpot.X, drawPosCarSpot.Y, drawPosCarSpot.Z + 1f), fuelPumpRadius, 255, 255, 255, 100, true, true);
                 }
             }
+
             return false;
         }
         #endregion
@@ -276,10 +318,12 @@ namespace AdvancedInteractionSystem
 
                 // Calculate fuel filled during this session
                 fuelRefilled = currentFuel - initialFuel;
+
                 // Increment the currentFuel by the fillAmount per tick
                 if (currentFuel < maxFuel)
                 {
                     Fuel.UpdateVehicleFuel(license, -fillAmount);
+                    vehicle.FuelLevel = currentFuel;
                 }
 
                 // Fuel.CurrentFuel += fillAmount;

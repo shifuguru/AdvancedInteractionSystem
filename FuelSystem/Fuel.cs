@@ -25,6 +25,7 @@ namespace AdvancedInteractionSystem
         public static float LowFuel = MaxFuel * 0.25f; // 25% fuel: Low Fuel warning. 
         public static float MinFuel = MaxFuel * 0.10f; // 10% fuel: Reserve Tank warning.
         public static float BaseConsumption = 0f;
+        public static string fuelDebugMessage = string.Empty; // Funnel all messages into 1 debug message
         #endregion
 
         #region Vehicle: 
@@ -269,24 +270,25 @@ namespace AdvancedInteractionSystem
                 if (GPC == null || !GPC.Exists() || GPC.IsDead) return;
 
                 UpdateFuelForAllVehicles();
-                
+
+                GSH.RefillWithJerryCan(InteractionManager.closestVehicle);
+
                 // If Current Vehicle doesn't exist, does the Last Vehicle?
                 Vehicle currentVehicle = InteractionManager.currentVehicle;
 
                 if (currentVehicle != null && currentVehicle.Exists())
                 {
-                    RenderFuelBar(CurrentFuel, MaxFuel, false);
+                    // RenderFuelBar(CurrentFuel, MaxFuel, false);
+                    RenderFuelBar(currentVehicle.FuelLevel, MaxFuel, false);
                     GSH.GetClosestGasStation();
                     GSH.PumpLogic(currentVehicle);
                 }
-                else currentVehicle = Game.Player.Character.LastVehicle;
+                else
+                {
+                    currentVehicle = Game.Player.Character.LastVehicle;
+                }
 
-                if (currentVehicle == null || !currentVehicle.Exists()
-                        || currentVehicle.IsBicycle
-                        || currentVehicle.HighGear <= 1
-                        || currentVehicle.IsBoat
-                        || currentVehicle.IsAircraft)
-                    return;
+                if (currentVehicle == null || !currentVehicle.Exists() || currentVehicle.IsBicycle) return;
 
                 InitialiseFuelRegistry(currentVehicle);
                 UpdateFuelForCurrentVehicle(currentVehicle);
@@ -294,13 +296,20 @@ namespace AdvancedInteractionSystem
                 UpdateFuelWarning();
                 UpdateFuelBarColor();
                 // ManageEngineCeasure();
-                
-                GSH.RefillWithJerryCan(InteractionManager.closestVehicle);
+            }
+            catch (IndexOutOfRangeException ex)
+            {
+                AIS.LogException("Fuel.OnTick (IndexOutOfRange)", ex);
+            }
+            catch (NullReferenceException ex)
+            {
+                AIS.LogException("Fuel.OnTick (NullReference)", ex);
             }
             catch (Exception ex)
             {
-                AIS.LogException("Fuel.OnTick", ex);
+                AIS.LogException("Fuel.OnTick (General)", ex);
             }
+
         }
 
         // FUEL REGISTRY:
@@ -340,7 +349,6 @@ namespace AdvancedInteractionSystem
                 var (currentFuel, maxFuel) = fuelRegistry[license];
                 currentFuel = Math.Max(currentFuel - fuelConsumption, 0);
                 fuelRegistry[license] = (currentFuel, maxFuel);
-
             }
         }
 
