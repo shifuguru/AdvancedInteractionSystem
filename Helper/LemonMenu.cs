@@ -238,8 +238,15 @@ namespace AdvancedInteractionSystem
 
             // Adjust the show duration within the specified range 
             e.Object = (e.Object + increment - minLimit + (maxLimit - minLimit + 1)) % (maxLimit - minLimit + 1) + minLimit;
-            Fuel.UpdateVehicleFuel(InteractionManager.currentVehicle.Mods.LicensePlate, -increment);
             
+            string license = InteractionManager.currentVehicle.Mods.LicensePlate;
+
+            if (Fuel.CompareLicense(license))
+            {
+                var (currentFuel, maxFuel) = Fuel.fuelRegistry[license];
+                currentFuel = Math.Max(e.Object, 0);
+                Fuel.fuelRegistry[license] = (currentFuel, maxFuel);
+            }
             // SettingsManager.SaveSettings();
         }
 

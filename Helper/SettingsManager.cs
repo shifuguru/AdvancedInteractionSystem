@@ -90,6 +90,7 @@ namespace AdvancedInteractionSystem
                 writer.WriteLine("Fuel Options", $"Fuel Debug Enabled = {fuel_debugEnabled}");
                 writer.WriteLine("Fuel Options", $"Tripomatic Debug Enabled = {trip_debugEnabled}");
                 writer.WriteLine("Fuel Options", $"Fuel Pump Debug Enabled = {pump_debugEnabled}");
+                writer.WriteLine("Fuel Options", $"Refuel Speed Multiplier = {refuelSpeedMultiplier}");
                 // REPAIRS:
                 writer.WriteLine("Repairs Options", $"Repairs Enabled = {repairsEnabled}");
                 writer.WriteLine("Repairs Options", $"Repairs Debug Enabled = {repairs_debugEnabled}");
@@ -147,6 +148,7 @@ namespace AdvancedInteractionSystem
                     fuel_debugEnabled = settings.GetValue<bool>("Fuel Options", "Fuel Debug Enabled", fuel_debugEnabled);
                     fuel_debugEnabled = settings.GetValue<bool>("Fuel Options", "Tripometer Debug Enabled", trip_debugEnabled);
                     pump_debugEnabled = settings.GetValue<bool>("Fuel Options", "Fuel Pump Debug Enabled", pump_debugEnabled);
+                    refuelSpeedMultiplier = settings.GetValue<int>("Fuel Options", "Refuel Speed Multiplier", refuelSpeedMultiplier);
 
                     repairsEnabled = settings.GetValue<bool>("Repair Options", "Repairs Enabled", repairsEnabled);
                     repairs_debugEnabled = settings.GetValue<bool>("Repair Options", "Repairs Debug Enabled", repairs_debugEnabled);
@@ -209,6 +211,7 @@ namespace AdvancedInteractionSystem
                     settings.SetValue<bool>("Fuel Options", "Fuel Debug Enabled", fuel_debugEnabled);
                     settings.SetValue<bool>("Fuel Options", "Tripometer Debug Enabled", trip_debugEnabled);
                     settings.SetValue<bool>("Fuel Options", "Fuel Pump Debug Enabled", pump_debugEnabled);
+                    settings.SetValue<int>("Fuel Options", "Refuel Speed Multiplier", refuelSpeedMultiplier);
 
                     settings.SetValue<bool>("Repair Options", "Repairs Enabled", repairsEnabled);
                     settings.SetValue<bool>("Repair Options", "Repairs Debug Enabled", repairs_debugEnabled);

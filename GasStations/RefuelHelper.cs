@@ -44,6 +44,7 @@ namespace AdvancedInteractionSystem
             // Chilliad Town:
             new Vector3(354.86f, 5370.63f, 670.02f),
         };
+
         public static List<Blip> fuelBlips = new List<Blip>();
         public static Blip fuelBlip;
         public static Blip closestBlip;
@@ -164,6 +165,7 @@ namespace AdvancedInteractionSystem
             new Model("prop_gas_pump_1a"),
             new Model("prop_gas_pump_1b"),
             new Model("prop_gas_pump_1c"),
+            new Model("prop_gas_pump_1d"),
             new Model("prop_gas_pump_old2"),
             new Model("prop_gas_pump_old3"),
             new Model("prop_vintage_pump"),
