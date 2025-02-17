@@ -79,7 +79,7 @@ namespace AdvancedInteractionSystem
             Interval = 10;
         }
 
-        public static void OnTick(object sender, EventArgs e)
+        private void OnTick(object sender, EventArgs e)
         {
             try
             {
@@ -95,10 +95,7 @@ namespace AdvancedInteractionSystem
                 }
 
                 int repairTime = Game.GameTime - actionStartTime.Millisecond;
-                if (repairTime < 500)
-                {
-                    return;
-                }
+                if (repairTime < 500) return;
 
                 engineHealth = vehicle.EngineHealth;
                 totalHealth = vehicle.HealthFloat;
@@ -106,23 +103,27 @@ namespace AdvancedInteractionSystem
 
                 if (SettingsManager.repairs_debugEnabled)
                 {
-                    N.ShowSubtitle($"Body Health: {vehicle.BodyHealth} Engine Health: {vehicle.EngineHealth}", 200);
+                    N.ShowSubtitle($"Repairing... Time: {repairTime} ~n~Body Health: {vehicle.BodyHealth} Engine Health: {vehicle.EngineHealth}", 500);
                 }
 
                 if (totalHealth < 1000f)
                 {
-                    vehicle.EngineHealth += repairAmount;
-                    
+                    // vehicle.EngineHealth += repairAmount;
+                    vehicle.EngineHealth = Math.Min(vehicle.EngineHealth + 2.5f, 1000f);
                 }
                 if (bodyHealth < 1000f)
                 {
-                    vehicle.BodyHealth += repairAmount;
+                    // vehicle.BodyHealth += repairAmount;
+                    vehicle.BodyHealth = Math.Min(vehicle.BodyHealth + 2.5f, 1000f);
                 }
-                else
+
+                PlayRepairAnimation();
+
+
+                if (vehicle.EngineHealth >= 1000f && vehicle.BodyHealth >= 1000f)
                 {
                     CompleteRepair(vehicle);
                 }
-
             }
             catch (Exception ex)
             {
@@ -138,6 +139,38 @@ namespace AdvancedInteractionSystem
 
         // Start Repair Process:
 
+        private void CompleteRepair(Vehicle vehicle)
+        {
+            try
+            {
+                if (vehicle == null) return;
+
+                InteractionManager.CompleteActions();
+                Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
+
+                if (SettingsManager.repairBodyDamage)
+                {
+                    vehicle.Repair();
+                }
+
+                RepairAllWindows(vehicle);
+                RepairAllWheels(vehicle);
+                RepairAllDoors(vehicle);
+
+                RemoveRepairProp();
+                isRepairing = false;
+
+                if (SettingsManager.repairs_debugEnabled)
+                {
+                    N.ShowSubtitle("~g~Repair Complete~s~", 300);
+                }
+            }
+            catch (Exception ex)
+            {
+                AIS.LogException("Repairs.CompleteRepairProcess", ex);
+            }
+        }
+
         private void RepairBody(Vehicle vehicle)
         {
             vehicle.BodyHealth = 1000f;
@@ -152,15 +185,41 @@ namespace AdvancedInteractionSystem
         }
         private void RepairAllWindows(Vehicle vehicle)
         {
-            vehicle.Windows[0].Repair();
+            foreach (VehicleWindowIndex window in Enum.GetValues(typeof(VehicleWindowIndex)))
+            {
+                if (!vehicle.Windows[window].IsIntact)
+                {
+                    vehicle.Windows[window].Repair();
+                }
+            }
         }
+
+        private void RepairAllDoors(Vehicle vehicle)
+        {
+            foreach (VehicleDoorIndex door in Enum.GetValues(typeof(VehicleDoorIndex)))
+            {
+                if (Function.Call<bool>(Hash.IS_VEHICLE_DOOR_DAMAGED, vehicle, door))
+                {
+                    Function.Call(Hash.SET_VEHICLE_DOOR_BROKEN, vehicle, door, false);
+                    vehicle.Doors[door].Close();
+                }
+            }
+        }
+
         private void RepairWheel(Vehicle vehicle)
         {
 
         }
+
         private void RepairAllWheels(Vehicle vehicle)
         {
-
+            foreach (VehicleWheelBoneId wheel in Enum.GetValues(typeof(VehicleWheelBoneId)))
+            {
+                if (Function.Call<bool>(Hash.IS_VEHICLE_TYRE_BURST, vehicle, wheel, false))
+                {
+                    vehicle.Wheels[wheel].Fix();
+                }
+            }
         }
 
         public static void StartRepairProcess(Vehicle vehicle)
@@ -193,11 +252,13 @@ namespace AdvancedInteractionSystem
                     return false;
                 }
 
-                // If the engine cover is closed
+                // If the engine cover is closed - may remove this... kind of annoying and would be better if the player opens automatically when repairing.
                 if (!vehicle.Doors[VehicleDoorIndex.Hood].IsOpen)
                 {
-                    N.ShowSubtitle("Open the hood to repair the engine", 1500);
-                    return false;
+                    vehicle.Doors[VehicleDoorIndex.Hood].Open();
+                    vehicle.Doors[VehicleDoorIndex.Trunk].Open();
+                    // N.ShowSubtitle("Open the hood to repair the engine", 1500);
+                    return true;
                 }
 
                 return true;
@@ -216,35 +277,6 @@ namespace AdvancedInteractionSystem
             repairProp.Detach();
             repairProp.Delete();
             repairProp = null;
-        }
-
-        public static void CompleteRepair(Vehicle vehicle)
-        {
-            try
-            {
-                if (vehicle == null) return;
-
-                InteractionManager.CompleteActions();
-                Game.Player.Character.Task.ClearAnimation("mini@repair", "fixing_a_ped");
-                
-                if (SettingsManager.repairBodyDamage)
-                {
-                    vehicle.Repair();
-                }
-
-                RemoveRepairProp();
-
-                isRepairing = false;
-
-                if (SettingsManager.repairs_debugEnabled)
-                {
-                    N.ShowSubtitle("~g~Repair Complete~s~", 300);
-                }
-            }
-            catch (Exception ex)
-            {
-                AIS.LogException("Repairs.CompleteRepairProcess", ex);
-            }
         }
     }
 }
