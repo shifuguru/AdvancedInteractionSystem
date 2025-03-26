@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\interaction\\persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|f:\\gta5 scripts\\projects\\advancedinteractionsystem\\fuelsystem\\fuel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:fuelsystem\\fuel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\helper\\settingsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:helper\\settingsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\interaction\\persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|solutionrelative:interaction\\persistence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{8CF316A1-2EA3-4BD5-B9F0-9B23F8B8BA66}|AdvancedInteractionSystem.csproj|F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\helper\\lemonmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -42,7 +42,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 261,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -74,7 +74,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "SettingsManager.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Helper\\SettingsManager.cs",
               "RelativeDocumentMoniker": "Helper\\SettingsManager.cs",
@@ -86,28 +86,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Fuel.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\FuelSystem\\Fuel.cs",
               "RelativeDocumentMoniker": "FuelSystem\\Fuel.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\FuelSystem\\Fuel.cs",
               "RelativeToolTip": "FuelSystem\\Fuel.cs",
-              "ViewState": "AgIAAK8BAAAAAAAAAAAmwMUBAABIAAAAAAAAAA==",
+              "ViewState": "AgIAAKkBAAAAAAAAAAAowMUBAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-16T06:37:11.86Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Persistence.cs",
               "DocumentMoniker": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\Persistence.cs",
               "RelativeDocumentMoniker": "Interaction\\Persistence.cs",
               "ToolTip": "F:\\GTA5 scripts\\Projects\\AdvancedInteractionSystem\\Interaction\\Persistence.cs",
               "RelativeToolTip": "Interaction\\Persistence.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAE4AAAAtAAAAAAAAAA==",
+              "ViewState": "AgIAAMUAAAAAAAAAAAASwN4AAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-26T01:14:12.297Z"
+              "WhenOpened": "2024-12-26T01:14:12.297Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",

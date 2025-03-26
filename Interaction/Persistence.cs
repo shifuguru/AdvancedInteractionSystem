@@ -20,9 +20,9 @@ namespace AdvancedInteractionSystem
 {
     public enum PlayerCharacter
     {
-        Michael, 
-        Franklin, 
-        Trevor, 
+        Michael,
+        Franklin,
+        Trevor,
         Other,
         None
     }
@@ -41,7 +41,7 @@ namespace AdvancedInteractionSystem
         public int PrimaryColor { get; set; }
         public int SecondaryColor { get; set; }
         public float FuelLevel { get; set; }
-        public float MaxFuel {  get; set; }
+        public float MaxFuel { get; set; }
         public float TripFuelLevel { get; set; }
         public float LastFuelLevel { get; set; }
         public float Odometer { get; set; }
@@ -166,8 +166,8 @@ namespace AdvancedInteractionSystem
                     string.Format(
                         $"Weather: {World.Weather.ToString()}\n"
                         + $"Health: {Math.Round(InteractionManager.currentVehicle.HealthFloat)}\n"
-                        + $"Temp: {InteractionManager.currentVehicle.EngineTemperature:F2} °C\n" 
-                        + $"Speed: {Math.Abs(InteractionManager.currentVehicle.Speed * 3.6f):F0} km/h\n" 
+                        + $"Temp: {InteractionManager.currentVehicle.EngineTemperature:F2} °C\n"
+                        + $"Speed: {Math.Abs(InteractionManager.currentVehicle.Speed * 3.6f):F0} km/h\n"
                         + $"Rate: {Fuel.CalculateFuelConsumptionRate(InteractionManager.currentVehicle):F3}\n"
                         + $"Fuel = {Fuel.CurrentFuel / 1000f:F2} Liters\n"
                         + $"RPM: {InteractionManager.currentVehicle.CurrentRPM * 10000:F0}\n"),
@@ -519,7 +519,7 @@ namespace AdvancedInteractionSystem
                 return true;
             }
         }
-        
+
         // REGISTRY:
         private bool IsVehicleOwned(VehicleData data)
         {
@@ -609,7 +609,7 @@ namespace AdvancedInteractionSystem
                 AIS.LogException("SaveVehicleToXml()", ex);
             }
         }
-        
+
         // LOADING
         public static void LoadPlayerVehicleRegistry()
         {
@@ -639,7 +639,7 @@ namespace AdvancedInteractionSystem
                             {
                                 N.DisplayNotification($"Loading Registry - {player} : {file}", true);
                             }
-                            
+
                             if (data != null)
                             {
                                 playerVehicleRegistry[player].Add(data);
