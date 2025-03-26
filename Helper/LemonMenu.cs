@@ -105,21 +105,21 @@ namespace AdvancedInteractionSystem
             cleaning_debugEnabledToggle.Activated += ToggleCleaningDebug;
             flipEnabledToggle.Activated += ToggleFlip;
             //
-            modEnabledToggle.Checked = modEnabledToggle.Checked;
-            debugEnabledToggle.Checked = debugEnabledToggle.Checked;
-            handler_debugEnabledToggle.Checked = handler_debugEnabledToggle.Checked;
-            fuelEnabledToggle.Checked = fuelEnabledToggle.Checked;
-            fuel_debugEnabledToggle.Checked = fuel_debugEnabledToggle.Checked;
+            modEnabledToggle.Checked = SettingsManager.modEnabled;
+            debugEnabledToggle.Checked = SettingsManager.debugEnabled;
+            handler_debugEnabledToggle.Checked = SettingsManager.handler_debugEnabled;
+            fuelEnabledToggle.Checked = SettingsManager.fuelEnabled;
+            fuel_debugEnabledToggle.Checked = SettingsManager.fuel_debugEnabled;
             refuelSpeedMultiplierItem.SelectedItem = SettingsManager.refuelSpeedMultiplier;
             fuel_levelItem.SelectedItem = (int)Fuel.CurrentFuel;
-            persistenceEnabledToggle.Checked = persistenceEnabledToggle.Checked;
-            persistence_debugEnabledToggle.Checked = persistence_debugEnabledToggle.Checked;
-            repairs_debugEnabledToggle.Checked = repairs_debugEnabledToggle.Checked;
-            cleaning_debugEnabledToggle.Checked = cleaning_debugEnabledToggle.Checked;
-            flipEnabledToggle.Checked = flipEnabledToggle.Checked;
-            repairsEnabledToggle.Checked = repairsEnabledToggle.Checked;
-            cleaningEnabledToggle.Checked = cleaningEnabledToggle.Checked;
-            ignitionControlEnabledToggle.Checked = ignitionControlEnabledToggle.Checked; 
+            persistenceEnabledToggle.Checked = SettingsManager.persistenceEnabled;
+            persistence_debugEnabledToggle.Checked = SettingsManager.persistence_debugEnabled;
+            repairs_debugEnabledToggle.Checked = SettingsManager.repairs_debugEnabled;
+            cleaning_debugEnabledToggle.Checked = SettingsManager.cleaning_debugEnabled;
+            flipEnabledToggle.Checked = SettingsManager.flipEnabled;
+            repairsEnabledToggle.Checked = SettingsManager.repairsEnabled;
+            cleaningEnabledToggle.Checked = SettingsManager.cleaningEnabled;
+            ignitionControlEnabledToggle.Checked = SettingsManager.ignitionControlEnabled;
         }
         public static void OpenMenu()
         {

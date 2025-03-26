@@ -15,10 +15,9 @@ namespace AdvancedInteractionSystem
         // Settings: 
         public static string modName = "Advanced Interaction System";
         public static bool modEnabled = SettingsManager.modEnabled;
-
-        public static float Clamp(float value, float min, float max)
+        public AIS()
         {
-            return Math.Max(min, Math.Min(value, max));
+            SettingsManager.LoadSettings();
         }
 
         // WEATHER: 
@@ -80,6 +79,7 @@ namespace AdvancedInteractionSystem
             return weatherCondition;
         }
         
+        // BLIPS:
         public static void AttachBlip(Entity entity, BlipSprite sprite, float scale, BlipColor color, string blipName, List<Blip> blips)
         {
             if (entity == null || blips == null) return;
@@ -92,8 +92,6 @@ namespace AdvancedInteractionSystem
             blip.IsShortRange = SettingsManager.shortRangeBlips;
             blips.Add(blip);
         }
-
-
         public static void CreateBlip(Vector3 position, BlipSprite sprite, float scale, BlipColor color, string blipName, List<Blip> blips)
         {
             if (position == null || blips == null) return;
@@ -107,19 +105,12 @@ namespace AdvancedInteractionSystem
             blip.IsShortRange = SettingsManager.shortRangeBlips;
             blips.Add(blip);
         }
-
         public static Vector3 FlashBlip(Blip blip)
         {
             blip.IsShortRange = false;
             blip.IsFlashing = true;
             blip.FlashInterval = 800;
             return blip.Position;
-        }
-
-        public static void StopFlashingBlip(Blip blip)
-        {
-            blip.IsFlashing = false;
-            blip.IsShortRange = true;
         }
         public static void StopFlashingAllBlips(List<Blip> blips)
         {
@@ -146,18 +137,12 @@ namespace AdvancedInteractionSystem
             blips.Clear();
         }
 
-        public AIS()
-        {
-            SettingsManager.LoadSettings();
-        }
 
+        // LOGGING: 
         public static void LogDebug(string msg)
         {
             Console.WriteLine($"{msg}");
         }
-
-
-        // EXCEPTION LOGGING: 
         public static void LogException(string methodName, Exception ex)
         {
             try

@@ -22,3 +22,4 @@ F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\ScriptHookVDotN
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\Advanced.5D6822AB.Up2Date
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.dll
 F:\GTA5 scripts\Projects\AdvancedInteractionSystem\obj\x64\Debug\AdvancedInteractionSystem.pdb
+F:\GTA5 scripts\Projects\AdvancedInteractionSystem\bin\x64\Debug\AdvancedInteractionSystem.dll.config

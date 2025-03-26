@@ -236,7 +236,7 @@ namespace AdvancedInteractionSystem
             {
                 AIS.FlashBlip(GSH.closestBlip);
             }
-            
+
             N.ShowHelpText("Press ~INPUT_CONTEXT~ for directions to the closest Gas Station");
 
             if (Game.IsControlJustPressed(Control.Context))
@@ -275,10 +275,10 @@ namespace AdvancedInteractionSystem
 
                 // If Current Vehicle doesn't exist, does the Last Vehicle?
                 Vehicle currentVehicle = InteractionManager.currentVehicle;
-
+                
                 if (currentVehicle != null && currentVehicle.Exists())
                 {
-                    // RenderFuelBar(CurrentFuel, MaxFuel, false);
+                    if (currentVehicle.IsBicycle) return;
                     RenderFuelBar(currentVehicle.FuelLevel, MaxFuel, false);
                     GSH.GetClosestGasStation();
                     GSH.PumpLogic(currentVehicle);
@@ -292,7 +292,6 @@ namespace AdvancedInteractionSystem
 
                 InitialiseFuelRegistry(currentVehicle);
                 UpdateFuelForCurrentVehicle(currentVehicle);
-
                 UpdateFuelWarning();
                 UpdateFuelBarColor();
                 // ManageEngineCeasure();
@@ -309,7 +308,6 @@ namespace AdvancedInteractionSystem
             {
                 AIS.LogException("Fuel.OnTick (General)", ex);
             }
-
         }
 
         // FUEL REGISTRY:
@@ -410,9 +408,9 @@ namespace AdvancedInteractionSystem
                 fuelRegistry.Remove(license);
             }
         }
-
         #endregion
-
+        /* The RemoveOldestCar method clears the registry when it exceeds 32 entries.
+         * You might want to consider using a more dynamic approach based on the distance of vehicles from the player or vehicle lifespan. */
         public static void RemoveOldestCar()
         {
             if (licenseQueue.Count > 0)
@@ -421,13 +419,11 @@ namespace AdvancedInteractionSystem
                 fuelRegistry.Remove(oldestLicense);
             }
         }
-        
+
         public static bool CompareLicense(string license)
         {
             return fuelRegistry.ContainsKey(license);
         }
-
-
 
 
         #region FUEL SYSTEM: 
@@ -439,7 +435,7 @@ namespace AdvancedInteractionSystem
             float weatherCondition = AIS.GetWeatherConditionRate(World.Weather.ToString());
 
             float baseConsumption = mass * driveForce * weatherCondition;
-            
+
             return baseConsumption;
         }
         public static float CalculateFuelConsumptionRate(Vehicle vehicle)
@@ -450,20 +446,35 @@ namespace AdvancedInteractionSystem
             int engineState = vehicle.IsEngineRunning ? 1 : 0;
 
             float baseConsumption = GetBaseConsumption(vehicle);
-            float rpm = vehicle.CurrentRPM * 10;
-            float engineHealth = vehicle.EngineHealth;
+            float rpm = vehicle.CurrentRPM * 1.2f;
 
+            // Adjust RPM (scaled) and add a contribution from acceleration.
+            // The idea is that higher RPM and aggressive acceleration will use more fuel.
+            float dynamicLoad = (vehicle.CurrentRPM * rpm) * (vehicle.Acceleration + 0.5f * vehicle.CurrentRPM * rpm);
+            // Use speed to slightly boost consumption at higher speeds.
+            // Vehicle Heath:
+            float engineHealth = Math.Max(1f, vehicle.EngineHealth);
+            float bodyHealth = Math.Max(1f, vehicle.BodyHealth);
+            float tankHealth = Math.Max(1f, vehicle.PetrolTankHealth);
+            float vehicleHealth = Math.Max(1f, vehicle.HealthFloat);
+            float totalHealth = engineHealth + bodyHealth + tankHealth + vehicleHealth;
+            float averageHealth = totalHealth / 4f;
             // Throttle = Throttle Position (0 - 1). 
             float throttle = Math.Max(0, vehicle.Throttle);
             float acceleration = Math.Max(0, vehicle.Acceleration);
             float speedKph = Math.Abs(vehicle.Speed * 3.6f);
+            // Dividing speed (in km/h) by 100 scales it down.
+            float speedFactor = (speedKph / 100f);
 
             // Engine Temperature / efficiency
             float engineTemp = (float)Math.Round(vehicle.EngineTemperature, 1);
             float tempFactor = engineTemp < 40 ? 1.5f : 1.0f; // Adjust factor based on engine temperature.
+            // Displacement Factor (Higher speeds consume more fuel)
+            float displacementFactor = vehicle.HandlingData.InitialDriveMaxFlatVelocity / 200f;
+            baseConsumption *= displacementFactor;
 
             // BASE CONSUMPTION.
-
+            /*
             // bool isGrounded = vehicle.IsOnAllWheels;
             // string wheelType = vehicle.Mods.WheelType.ToString();
             // float passengers = vehicle.PassengerCount;
@@ -482,38 +493,31 @@ namespace AdvancedInteractionSystem
             // float tankVolume = vehicle.HandlingData.PetrolTankVolume;
             // float tractionMin = vehicle.HandlingData.TractionCurveMin;
             // float tractionMax = vehicle.HandlingData.TractionCurveMax;
+            */
 
             // FUEL CONSUMPTION RATE FORMULA: 
             float consumptionRate =
-                engineState // 0 or 1
-                * baseConsumption // 700 
-                * rpm // 0.2
-                * (acceleration + rpm) 
-                * (speedKph / 100f + rpm)
+                engineState
+                * baseConsumption 
+                * dynamicLoad
+                * (speedFactor + dynamicLoad)
                 * tempFactor
                 / engineHealth;
 
-            if (speedKph < 1)
-            {
-                consumptionRate *= 0.1f;
-            }
+            if (speedKph < 1) consumptionRate *= 0.1f;
+
+            // speed = distance / time 
+            // distance = speed * time
+            float distanceTraveled = vehicle.Speed * Game.LastFrameTime;
+            float litersPerKm = distanceTraveled > 0 ? consumptionRate / (distanceTraveled / 1000f) : 0;
+            float litersPer100Km = litersPerKm * 100f;
+
             // float km/L = totalDistancedTravelled / (currentFuel / 1000f);
-            float liters = (CurrentFuel / 1000f);
+            // float liters = (CurrentFuel / 1000f);
 
             // float fuelConsumptionRate = baseConsumption * (throttle * acceleration * rpm / engHealth) * (speed + minSpeed) * roadFrictionMultiplier * environmentalMultiplier * behaviouralMultiplier * vehicleSpecsMultiplier;
 
-            string textColor = consumptionRate >= 1f ? "~r~" : "~w~";
-
-            if (SettingsManager.fuel_debugEnabled)
-            {
-                N.ShowSubtitle(
-                $"Fuel = ~y~{liters:F2} Liters~s~ " 
-                + $"Rate: ~p~{consumptionRate:F3}~s~ "
-                + $"RPM: ~r~{rpm * 1000:F0}~s~ "
-                + $"~n~Speed: ~y~{speedKph}~s~ Health: ~g~{engineHealth}~s~ "
-                + $"~n~Temp: ~o~{engineTemp}C~s~ Weather: ~o~{World.Weather.ToString()}~s~ "
-                , 500);
-            }
+            // string textColor = consumptionRate >= 1f ? "~r~" : "~w~";
 
             /*
             // 1. FRICTION. 
@@ -562,9 +566,12 @@ namespace AdvancedInteractionSystem
             // Calculate L/KM:
             // Once you have the distance traveled and the fuel consumed, you can use the appropriate units to calculate Liters per Kilometer.
             */
-                
+
             return consumptionRate;
         }
+
+        // This is potentially the cause of the bug where random cars with same license:
+        // Will have a car blip on them.
         public static Vehicle GetVehicleByLicense(string license)
         {
             foreach (Vehicle vehicle in World.GetAllVehicles())
@@ -577,21 +584,6 @@ namespace AdvancedInteractionSystem
             return null;
         }
         #endregion
-
-
-
-        // TRIP METER:
-        public static void UpdateTripReading(Vehicle vehicle)
-        {
-            if (vehicle == null) return;
-            currentPosition = vehicle.Position;
-        }
-        public static void ResetTripReading(Vehicle vehicle)
-        {
-            lastPosition = currentPosition;
-        }
-
-
 
         public static void OnAborted(object sender, EventArgs e)
         {

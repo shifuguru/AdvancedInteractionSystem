@@ -151,7 +151,8 @@ namespace AdvancedInteractionSystem
                 {
                     isRefueling = false;
                     FinishedRefueling();
-                    Persistence.ResetTripometer(vehicle);
+                    // Move this to a key press event:
+                    // Persistence.ResetTripometer(vehicle);
                 }
             }
             if (!isRefueling)
@@ -255,7 +256,7 @@ namespace AdvancedInteractionSystem
         #endregion
 
         // JERRY CAN: 
-        #region
+        #region JERRY CAN:
         public static void RefillWithJerryCan(Vehicle vehicle)
         {
             if (vehicle == null) return;

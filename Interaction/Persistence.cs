@@ -1,15 +1,20 @@
 ﻿using System;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 using System.IO;
 using System.Collections.Generic;
-using GTA;
-using GTA.Math;
-using GTA.Native;
-using GTA.UI;
 using System.Security.AccessControl;
 using System.Linq;
 using System.Drawing;
 using System.Xml;
+using System.Diagnostics;
+using GTA;
+using GTA.Math;
+using GTA.Native;
+using GTA.UI;
+using Control = GTA.Control;
+using Notification = GTA.UI.Notification;
+using Screen = GTA.UI.Screen;
 
 namespace AdvancedInteractionSystem
 {
@@ -148,12 +153,36 @@ namespace AdvancedInteractionSystem
         public void DisplayVehicleStats(VehicleData data)
         {
             if (data == null) return;
+
+            float fuelConsumed = data.TripFuelLevel / 1000f;
+            float distanceKm = data.Tripometer / 1000f;
+            float fuelEfficiencyL100Km = distanceKm > 0 ? (fuelConsumed / distanceKm) * 100 : 0;
+            float steeringAngle = InteractionManager.currentVehicle.SteeringAngle;
+
+            // FUEL LEVEL:
+            if (SettingsManager.fuel_debugEnabled)
+            {
+                new TextElement(
+                    string.Format(
+                        $"Weather: {World.Weather.ToString()}\n"
+                        + $"Health: {Math.Round(InteractionManager.currentVehicle.HealthFloat)}\n"
+                        + $"Temp: {InteractionManager.currentVehicle.EngineTemperature:F2} °C\n" 
+                        + $"Speed: {Math.Abs(InteractionManager.currentVehicle.Speed * 3.6f):F0} km/h\n" 
+                        + $"Rate: {Fuel.CalculateFuelConsumptionRate(InteractionManager.currentVehicle):F3}\n"
+                        + $"Fuel = {Fuel.CurrentFuel / 1000f:F2} Liters\n"
+                        + $"RPM: {InteractionManager.currentVehicle.CurrentRPM * 10000:F0}\n"),
+                    new PointF(250.0f, 620f), 0.25f, Color.LightBlue).Draw();
+            }
+            // TRIPOMETER:
             if (SettingsManager.trip_debugEnabled)
             {
-                N.ShowSubtitle($"Odometer: {data.Odometer / 1000f:F2} km\n" +
-                $"Tripometer: {data.Tripometer / 1000f:F2} km\n" +
-                $"Fuel Efficiency: {data.FuelEfficiency:F2} km/L\n" +
-                $"{data.Tripometer / 1000f:F3} km / {data.TripFuelLevel / 1000f:F2} L", 1500);
+                new TextElement(
+                    string.Format(
+                        $"{data.TripFuelLevel / 1000f:F2} L / {data.Tripometer / 1000f:F3} km\n"
+                        + $"Efficiency: {fuelEfficiencyL100Km:F2} L / 100 km\n"
+                        + $"Trip: {distanceKm:F2} km "
+                        + $"Odo: {data.Odometer / 1000f:F2} km"),
+                    new PointF(65.0f, 635f), 0.20f, Color.LightBlue).Draw();
             }
         }
 

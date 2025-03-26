@@ -62,15 +62,14 @@ namespace AdvancedInteractionSystem
         {
             try
             {
+                Game.Player.Character.Task.ClearAll();
                 Game.Player.Character.Task.PlayAnimation("mini@repair", "fixing_a_ped", 8f, -8f, -1, AnimationFlags.Loop | AnimationFlags.UpperBodyOnly | AnimationFlags.Secondary, 0.0f);
             }
             catch (Exception ex)
             {
                 AIS.LogException("Repairs.PlayRepairAnimation", ex);
             }
-            
         }
-
 
         public Repairs()
         {
@@ -94,9 +93,10 @@ namespace AdvancedInteractionSystem
                     return;
                 }
 
+                PlayRepairAnimation();
+
                 int repairTime = Game.GameTime - actionStartTime.Millisecond;
                 if (repairTime < 500) return;
-
                 engineHealth = vehicle.EngineHealth;
                 totalHealth = vehicle.HealthFloat;
                 bodyHealth = vehicle.BodyHealth;
@@ -117,7 +117,7 @@ namespace AdvancedInteractionSystem
                     vehicle.BodyHealth = Math.Min(vehicle.BodyHealth + 2.5f, 1000f);
                 }
 
-                PlayRepairAnimation();
+                
 
 
                 if (vehicle.EngineHealth >= 1000f && vehicle.BodyHealth >= 1000f)
@@ -252,14 +252,16 @@ namespace AdvancedInteractionSystem
                     return false;
                 }
 
+                /*
                 // If the engine cover is closed - may remove this... kind of annoying and would be better if the player opens automatically when repairing.
                 if (!vehicle.Doors[VehicleDoorIndex.Hood].IsOpen)
                 {
                     vehicle.Doors[VehicleDoorIndex.Hood].Open();
                     vehicle.Doors[VehicleDoorIndex.Trunk].Open();
                     // N.ShowSubtitle("Open the hood to repair the engine", 1500);
-                    return true;
+                    return false;
                 }
+                */
 
                 return true;
             }

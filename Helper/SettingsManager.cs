@@ -19,6 +19,7 @@ namespace AdvancedInteractionSystem
         public static bool handler_debugEnabled = true;
         public static bool disableAutoStart = true;
         public static bool IVExit = true;
+        public static bool indicatorsEnabled = true;
         // Ignition:
         public static bool ignition_debugEnabled = true;
         public static bool ignitionControlEnabled = true; // Enable the Vehicle Engine Button/Key. 
@@ -88,9 +89,9 @@ namespace AdvancedInteractionSystem
                 // FUEL: 
                 writer.WriteLine("Fuel Options", $"Fuel Enabled = {fuelEnabled}");
                 writer.WriteLine("Fuel Options", $"Fuel Debug Enabled = {fuel_debugEnabled}");
-                writer.WriteLine("Fuel Options", $"Tripomatic Debug Enabled = {trip_debugEnabled}");
                 writer.WriteLine("Fuel Options", $"Fuel Pump Debug Enabled = {pump_debugEnabled}");
                 writer.WriteLine("Fuel Options", $"Refuel Speed Multiplier = {refuelSpeedMultiplier}");
+                writer.WriteLine("Fuel Options", $"Tripomatic Debug Enabled = {trip_debugEnabled}");
                 // REPAIRS:
                 writer.WriteLine("Repairs Options", $"Repairs Enabled = {repairsEnabled}");
                 writer.WriteLine("Repairs Options", $"Repairs Debug Enabled = {repairs_debugEnabled}");
@@ -118,6 +119,7 @@ namespace AdvancedInteractionSystem
         {
             try
             {
+                /*
                 if (!Directory.Exists(settingsDirectory))
                 {
                     Directory.CreateDirectory(settingsDirectory);
@@ -126,7 +128,7 @@ namespace AdvancedInteractionSystem
                 if (!File.Exists(settingsFilePath))
                 {
                     CreateIni(settingsFilePath);
-                }
+                }*/
                 
                 settings = ScriptSettings.Load(settingsFilePath);
 
@@ -146,9 +148,9 @@ namespace AdvancedInteractionSystem
 
                     fuelEnabled = settings.GetValue<bool>("Fuel Options", "Fuel Enabled", fuelEnabled);
                     fuel_debugEnabled = settings.GetValue<bool>("Fuel Options", "Fuel Debug Enabled", fuel_debugEnabled);
-                    fuel_debugEnabled = settings.GetValue<bool>("Fuel Options", "Tripometer Debug Enabled", trip_debugEnabled);
                     pump_debugEnabled = settings.GetValue<bool>("Fuel Options", "Fuel Pump Debug Enabled", pump_debugEnabled);
                     refuelSpeedMultiplier = settings.GetValue<int>("Fuel Options", "Refuel Speed Multiplier", refuelSpeedMultiplier);
+                    trip_debugEnabled = settings.GetValue<bool>("Fuel Options", "Tripometer Debug Enabled", trip_debugEnabled);
 
                     repairsEnabled = settings.GetValue<bool>("Repair Options", "Repairs Enabled", repairsEnabled);
                     repairs_debugEnabled = settings.GetValue<bool>("Repair Options", "Repairs Debug Enabled", repairs_debugEnabled);
@@ -209,9 +211,9 @@ namespace AdvancedInteractionSystem
 
                     settings.SetValue<bool>("Fuel Options", "Fuel Enabled", fuelEnabled);
                     settings.SetValue<bool>("Fuel Options", "Fuel Debug Enabled", fuel_debugEnabled);
-                    settings.SetValue<bool>("Fuel Options", "Tripometer Debug Enabled", trip_debugEnabled);
                     settings.SetValue<bool>("Fuel Options", "Fuel Pump Debug Enabled", pump_debugEnabled);
                     settings.SetValue<int>("Fuel Options", "Refuel Speed Multiplier", refuelSpeedMultiplier);
+                    settings.SetValue<bool>("Fuel Options", "Tripometer Debug Enabled", trip_debugEnabled);
 
                     settings.SetValue<bool>("Repair Options", "Repairs Enabled", repairsEnabled);
                     settings.SetValue<bool>("Repair Options", "Repairs Debug Enabled", repairs_debugEnabled);

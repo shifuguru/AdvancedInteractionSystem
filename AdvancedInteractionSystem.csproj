@@ -73,7 +73,9 @@
     <Compile Include="Helper\AudioManager.cs" />
     <Compile Include="Helper\BoneHelper.cs" />
     <Compile Include="AIS.cs" />
+    <Compile Include="Helper\Indicators.cs" />
     <Compile Include="Helper\IniFileHelper.cs" />
+    <Compile Include="Helper\Safezone.cs" />
     <Compile Include="Interaction\DaytimeHeadlights.cs" />
     <Compile Include="FuelSystem\Fuel.cs" />
     <Compile Include="Helper\Helper.cs" />
@@ -90,10 +92,20 @@
     <Compile Include="Helper\Rectangle.cs" />
     <Compile Include="Interaction\Repairs.cs" />
     <Compile Include="Helper\SettingsManager.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".editorconfig" />
+    <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup />
